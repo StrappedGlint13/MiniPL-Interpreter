@@ -10,6 +10,9 @@ namespace LexerAnalysis
         private int startPos = 1;
 
         private int currentPos = 0;
+        private string currentToken = "";
+        
+        private bool lineHasSemiColon = false; 
 
         private static readonly Dictionary<string, TokenType> reservedWords = new Dictionary<string, TokenType>()
         {
@@ -34,123 +37,116 @@ namespace LexerAnalysis
             char[] line = s.ToCharArray();
             bool isString = false;
             bool isNumber = false;
-            string str = "";
+            
             List<Token> tokens =new List<Token>();
-            foreach (char ch in line)
+            foreach (char @char in line)
             {
                 currentPos+=1;
                 
                 // doubleDot
-                if (ch.Equals('.'))
+                if (@char.Equals('.'))
                 {                
-                    if (str != ".") 
+                    if (currentToken != ".") 
                     {
                         isNumber = false;
-                        tokens.Add(new Token(TokenType.INTEGER, str, startPos, lineNumber));
+                        tokens.Add(new Token(TokenType.INTEGER, currentToken, startPos, lineNumber));
                         startPos=currentPos;
-                        str = ".";
+                        currentToken = ".";
                         continue;
                     }
                     else
                     {
-                        tokens.Add(new Token(TokenType.DOUBLEDOTS, str+ch, startPos, lineNumber));
-                        startPos=currentPos;
-                        str = "";
+                        tokens.Add(new Token(TokenType.DOUBLEDOTS, currentToken+@char, startPos, lineNumber));
+                        move();
                         continue;
                     }
                 }
                 
                 // this maybe in another method
-                if (isString && !ch.Equals('"'))
+                if (isString && !@char.Equals('"'))
                 {
-                    str += ch;
+                    currentToken += @char;
                     continue;
                 }
 
-                if (isNumber && !isWhiteSpace(ch) && !(checkToken(ch.ToString(), startPos, lineNumber).terminal != TokenType.NONE))
+                if (isNumber && !isWhiteSpace(@char) && !(checkToken(@char.ToString(), startPos, lineNumber).terminal != TokenType.NONE))
                 {
-                    str += ch;
+                    currentToken += @char;
                     continue;
                 }
 
                 if (isString) 
                 {
                     isString = false;
-                    tokens.Add(new Token(TokenType.STRING, str+ch, startPos, lineNumber));
-                    str = "";
-                    startPos=currentPos;
+                    tokens.Add(new Token(TokenType.STRING, currentToken+@char, startPos, lineNumber));
+                    move();
                     continue;
                 } 
 
                 if (isNumber) 
                 {
                     isNumber = false;
-                    tokens.Add(new Token(TokenType.INTEGER, str, startPos, lineNumber));
-                    str = "";
-                    startPos=currentPos;
+                    tokens.Add(new Token(TokenType.INTEGER, currentToken, startPos, lineNumber));
+                    move();
                 }
                 
-                if (ch.Equals('t') && str == "in" || ch.Equals(':') || (ch.Equals('=') && str == ":")) 
+                if (@char.Equals('t') && currentToken == "in" || @char.Equals(':') || (@char.Equals('=') && currentToken == ":")) 
                 {
-                    str += ch;
+                    currentToken += @char;
+                    currentPos+=1;
                     continue;
                 }
        
-                if (isWhiteSpace(ch) || ch.Equals(';') || checkToken(str, startPos, lineNumber).terminal != TokenType.NONE || 
-                reservedWords.ContainsKey(str) || checkToken(ch.ToString(), startPos, lineNumber).terminal != TokenType.NONE) 
+                if (isWhiteSpace(@char) || checkToken(currentToken, startPos, lineNumber).terminal != TokenType.NONE || 
+                reservedWords.ContainsKey(currentToken) || checkToken(@char.ToString(), startPos, lineNumber).terminal != TokenType.NONE) 
                 {
-                    if (checkToken(str, startPos, lineNumber).terminal != TokenType.NONE) 
+                    if (checkToken(currentToken, startPos, lineNumber).terminal != TokenType.NONE) 
                     {
                         
-                        if (isNumberString(str))
+                        if (isNumberString(currentToken))
                         {
-                            tokens.Add(new Token(TokenType.INTEGER, str, startPos, lineNumber));
+                            tokens.Add(new Token(TokenType.INTEGER, currentToken, startPos, lineNumber));
                             isNumber = false;
                         } else {
-                            tokens.Add(checkToken(str, startPos, lineNumber));
+                            tokens.Add(checkToken(currentToken, startPos, lineNumber));
                         }
-
-                        str = "";
-                        if (isNumeric(ch)) {str = ch.ToString(); isNumber = true;}
-                        startPos=currentPos;
-                        
+                        if (isNumeric(@char)) {currentToken = @char.ToString(); isNumber = true;}
+                        move();
                     } 
                     else
                     {
-                        if (str.Length > 0) {
-                            tokens.Add(isIdentifierOrKeyWord(str));
-                            str = "";
-                            startPos=currentPos;
+                        if (currentToken.Length > 0) {
+                            tokens.Add(isIdentifierOrKeyWord(currentToken));
+                            move();
                         }
 
-                        if (checkToken(ch.ToString(), startPos, lineNumber).terminal != TokenType.NONE)
+                        if (checkToken(@char.ToString(), startPos, lineNumber).terminal != TokenType.NONE)
                         {
-                            if (ch.Equals(';')) {
-                                tokens.Add(new Token(TokenType.ENDOFLINE, ";", startPos, lineNumber));
-                                str = "";
-                                currentPos=startPos; 
-                            } else {
-                                tokens.Add(checkToken(ch.ToString(), startPos, lineNumber));
-                            }
-                           
+                            tokens.Add(checkToken(@char.ToString(), startPos, lineNumber));
+                            move();
+    
+                            if (@char.Equals(';')) {
+                                lineHasSemiColon = true;
+                            } 
                         }
                     } 
                     
                 }
-                else if (!isWhiteSpace(ch) && !ch.Equals(';') && !isEndofLine(ch))
+                else if (!isWhiteSpace(@char) && !@char.Equals(';') && !isEndofLine(@char))
                 {
-                    if (ch.Equals('"')) isString = true;
-                    if (isNumeric(ch)) isNumber = true;
-                    str += ch;
+                    if (@char.Equals('"')) isString = true;
+                    if (isNumeric(@char)) isNumber = true;
+                    currentToken += @char;
                 }
-                else if (isEndofLine(ch))
+                else if (isEndofLine(@char))
                 {
-                    str = "";
+                    if (!lineHasSemiColon) Console.WriteLine("Lexical Error: Line {0} does not have semicolon at the end.", lineNumber);      
+                    lineHasSemiColon = false;
+                    currentToken = "";
                     lineNumber++;
                     startPos=1;
                     currentPos=1; 
-                }
-                
+                }         
             }
             return tokens;
         }
@@ -201,7 +197,7 @@ namespace LexerAnalysis
                 return new Token(TokenType.NOT, ch, startPos, lineNumber);
                 break;
             case ";":
-                return new Token(TokenType.ENDOFLINE, ch, startPos, lineNumber);
+                return new Token(TokenType.SEMICOLON, ch, startPos, lineNumber);
                 break;
             case "(":
                 return new Token(TokenType.LPARENTHESES, ch, startPos, lineNumber);
@@ -221,6 +217,12 @@ namespace LexerAnalysis
             
             }
 
+        }
+
+        private void move()
+        {
+           currentToken = "";
+           startPos=currentPos;
         }
 
         private bool isWhiteSpace(char ch)

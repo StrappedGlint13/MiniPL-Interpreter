@@ -22,7 +22,7 @@ namespace LexerAnalysis
             INTEGER,
             BOOL,
             ASSERT,
-            ENDOFLINE,
+            SEMICOLON,
             LPARENTHESES,
             RPARENTHESES,
             TYPE,
