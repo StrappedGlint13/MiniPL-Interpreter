@@ -1,0 +1,2 @@
+var X : int := 44 + (1 * 2);
+print X;

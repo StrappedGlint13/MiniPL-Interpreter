@@ -11,19 +11,22 @@ public class Interpreter {
     
     public static void Main(string[] args) {
         Console.Write("Enter the filename: ");
-        string file = Console.In.ReadLine();
+        string file = "2_example";
+        //string file = Console.In.ReadLine();
 
-        string[] lines = {};
+        string language = "";
         if (File.Exists(file)) {    
-            lines = File.ReadAllLines(file);
-            foreach(string x in lines) {
-                Console.WriteLine(x);
-            }  
+            language = File.ReadAllText(file);
+            char[] line = language.ToCharArray();
+            foreach (char ch in line)
+            {
+                Console.Write(ch);
+            }
         } else {
             Console.WriteLine("File does not exists");
         }
         
-        Scanner lex = new Scanner(lines);
+        Scanner lex = new Scanner(language);
 
         List<Token> tokens = lex.Tokens;
         foreach (Token aPart in tokens)

@@ -7,152 +7,261 @@ namespace LexerAnalysis
     public class Scanner {
         public List<Token> Tokens { get; set; }
         private int lineNumber = 1;
-        public Scanner(string[] lines) {
-            Tokens = Scan(lines);
-        }
+        private int startPos = 1;
 
-        public List<Token> Scan(string[] lines) 
+        private int currentPos = 0;
+
+        private static readonly Dictionary<string, TokenType> reservedWords = new Dictionary<string, TokenType>()
         {
-            List<Token> tokens = new List<Token>();
-            foreach(string l in lines) 
-            {
-                tokens.AddRange(analyzeString(l));
-            }
-            return tokens;
-        }
+            {"for", TokenType.FOR},
+            {"do", TokenType.DO},
+            {"end", TokenType.END},
+            {"in", TokenType.IN},
+            {"var", TokenType.VAR},
+            {"assert", TokenType.ASSERT},
+            {"print", TokenType.PRINT},
+            {"read", TokenType.READ},
+            {"bool", TokenType.BOOL},
+            {"string", TokenType.STRING},
+            {"int", TokenType.INT}
+        };
 
-        public List<Token> analyzeString(string s) 
+        public Scanner(string lines) {
+            Tokens = scan(lines);
+        }
+        public List<Token> scan(string s) 
         {
             char[] line = s.ToCharArray();
+            bool isString = false;
+            bool isNumber = false;
             string str = "";
             List<Token> tokens =new List<Token>();
             foreach (char ch in line)
             {
-                if (ch.Equals(';')) 
-                {
-                    if (str.Length > 0) {
-                        tokens.Add(checkToken(str, lineNumber));
+                currentPos+=1;
+                
+                // doubleDot
+                if (ch.Equals('.'))
+                {                
+                    if (str != ".") 
+                    {
+                        isNumber = false;
+                        tokens.Add(new Token(TokenType.INTEGER, str, startPos, lineNumber));
+                        startPos=currentPos;
+                        str = ".";
+                        continue;
                     }
+                    else
+                    {
+                        tokens.Add(new Token(TokenType.DOUBLEDOTS, str+ch, startPos, lineNumber));
+                        startPos=currentPos;
+                        str = "";
+                        continue;
+                    }
+                }
+                
+                // this maybe in another method
+                if (isString && !ch.Equals('"'))
+                {
+                    str += ch;
+                    continue;
+                }
+
+                if (isNumber && !isWhiteSpace(ch) && !(checkToken(ch.ToString(), startPos, lineNumber).terminal != TokenType.NONE))
+                {
+                    str += ch;
+                    continue;
+                }
+
+                if (isString) 
+                {
+                    isString = false;
+                    tokens.Add(new Token(TokenType.STRING, str+ch, startPos, lineNumber));
+                    str = "";
+                    startPos=currentPos;
+                    continue;
+                } 
+
+                if (isNumber) 
+                {
+                    isNumber = false;
+                    tokens.Add(new Token(TokenType.INTEGER, str, startPos, lineNumber));
+                    str = "";
+                    startPos=currentPos;
+                }
+                
+                if (ch.Equals('t') && str == "in" || ch.Equals(':') || (ch.Equals('=') && str == ":")) 
+                {
+                    str += ch;
+                    continue;
+                }
+       
+                if (isWhiteSpace(ch) || ch.Equals(';') || checkToken(str, startPos, lineNumber).terminal != TokenType.NONE || 
+                reservedWords.ContainsKey(str) || checkToken(ch.ToString(), startPos, lineNumber).terminal != TokenType.NONE) 
+                {
+                    if (checkToken(str, startPos, lineNumber).terminal != TokenType.NONE) 
+                    {
+                        
+                        if (isNumberString(str))
+                        {
+                            tokens.Add(new Token(TokenType.INTEGER, str, startPos, lineNumber));
+                            isNumber = false;
+                        } else {
+                            tokens.Add(checkToken(str, startPos, lineNumber));
+                        }
+
+                        str = "";
+                        if (isNumeric(ch)) {str = ch.ToString(); isNumber = true;}
+                        startPos=currentPos;
+                        
+                    } 
+                    else
+                    {
+                        if (str.Length > 0) {
+                            tokens.Add(isIdentifierOrKeyWord(str));
+                            str = "";
+                            startPos=currentPos;
+                        }
+
+                        if (checkToken(ch.ToString(), startPos, lineNumber).terminal != TokenType.NONE)
+                        {
+                            if (ch.Equals(';')) {
+                                tokens.Add(new Token(TokenType.ENDOFLINE, ";", startPos, lineNumber));
+                                str = "";
+                                currentPos=startPos; 
+                            } else {
+                                tokens.Add(checkToken(ch.ToString(), startPos, lineNumber));
+                            }
+                           
+                        }
+                    } 
                     
-                    tokens.Add(new Token(TokenType.ENDOFLINE, ";", lineNumber));
+                }
+                else if (!isWhiteSpace(ch) && !ch.Equals(';') && !isEndofLine(ch))
+                {
+                    if (ch.Equals('"')) isString = true;
+                    if (isNumeric(ch)) isNumber = true;
+                    str += ch;
+                }
+                else if (isEndofLine(ch))
+                {
+                    str = "";
                     lineNumber++;
-                    
+                    startPos=1;
+                    currentPos=1; 
                 }
-                else if (!checkToken(ch.ToString(), lineNumber)
-                .terminal.Equals(TokenType.REST) && !isWhiteSpace(ch))
-                {
-                    if (str.Length > 0) {
-                        tokens.Add(checkToken(str, lineNumber));
-                    }
-                    tokens.Add(checkToken(ch.ToString(), lineNumber));
-                    str = "";
-                }
-                else if (!isWhiteSpace(ch))
-                {
-                    str = str + ch;
-                }
-                else 
-                {
-                    if (str.Length > 0) {
-                        tokens.Add(checkToken(str, lineNumber));
-                    }
-                    str = "";
-                }
+                
             }
             return tokens;
         }
 
-        public Token checkToken(string str, int lineNumber)
+        public Token isIdentifierOrKeyWord(String str)
         {
-            switch(str) 
+            if (reservedWords.ContainsKey(str))
+            {
+                if (!reservedWords.TryGetValue(str, out TokenType type))
+                {
+                    return new Token(type, str, startPos, lineNumber); // throw error here
+                }
+                
+                return new Token(type, str, startPos, lineNumber);
+            }
+            else 
+            {
+                return new Token(TokenType.IDENTIFIER, str, startPos, lineNumber);
+            }
+        }
+
+        public Token checkToken(string ch, int startPos, int lineNumber)
+        { 
+            switch(ch) 
             {
             case "+":
-                return new Token(TokenType.PLUS, str, lineNumber);
+                return new Token(TokenType.PLUS, ch, startPos, lineNumber);
                 break;
             case "-":
-                return new Token(TokenType.MINUS, str, lineNumber);
+                return new Token(TokenType.MINUS, ch, startPos, lineNumber);
                 break;
             case "*":
-                return new Token(TokenType.MULTIPLY, str, lineNumber);
+                return new Token(TokenType.MULTIPLY, ch, startPos, lineNumber);
                 break;
             case "/":
-                return new Token(TokenType.DIVIDE, str, lineNumber);
+                return new Token(TokenType.DIVIDE, ch, startPos, lineNumber);
                 break;
             case "<":
-                return new Token(TokenType.LESSTHAN, str, lineNumber);
+                return new Token(TokenType.LESSTHAN, ch, startPos, lineNumber);
                 break;
             case "=":
-                return new Token(TokenType.EQUALS, str, lineNumber);
+                return new Token(TokenType.EQUALS, ch, startPos, lineNumber);
                 break;
             case "&":
-                return new Token(TokenType.AND, str, lineNumber);
+                return new Token(TokenType.AND, ch, startPos, lineNumber);
                 break;
             case "!":
-                return new Token(TokenType.NOT, str, lineNumber);
-                break;
-            case "var":
-                return new Token(TokenType.VAR, str, lineNumber);
-                break;
-            case "for":
-                return new Token(TokenType.FOR, str, lineNumber);
-                break;
-            case "end":
-                return new Token(TokenType.END, str, lineNumber);
-                break;
-            case "in":
-                return new Token(TokenType.IN, str, lineNumber);
-                break;
-            case "do":
-                return new Token(TokenType.DO, str, lineNumber);
-                break;
-            case "read":
-                return new Token(TokenType.READ, str, lineNumber);
-                break;
-            case "print":
-                return new Token(TokenType.PRINT, str, lineNumber);
-                break;
-            case "int":
-                return new Token(TokenType.INT, str, lineNumber);
-                break;
-            case "string":
-                return new Token(TokenType.STRING, str, lineNumber);
-                break;
-            case "bool":
-                return new Token(TokenType.BOOL, str, lineNumber);
-                break;
-            case "assert":
-                return new Token(TokenType.ASSERT, str, lineNumber);
+                return new Token(TokenType.NOT, ch, startPos, lineNumber);
                 break;
             case ";":
-                return new Token(TokenType.ENDOFLINE, str, lineNumber);
+                return new Token(TokenType.ENDOFLINE, ch, startPos, lineNumber);
                 break;
             case "(":
-                return new Token(TokenType.LPARENTHESES, str, lineNumber);
+                return new Token(TokenType.LPARENTHESES, ch, startPos, lineNumber);
                 break;
             case ")":
-                return new Token(TokenType.RPARENTHESES, str, lineNumber);
+                return new Token(TokenType.RPARENTHESES, ch, startPos, lineNumber);
                 break;
             case ":":
-                return new Token(TokenType.TYPE, str, lineNumber);
+                return new Token(TokenType.PUNCTUATION, ch, startPos, lineNumber);
                 break;
-            case "\"":
-                return new Token(TokenType.DOUBLEQUOTES, str, lineNumber);
+            case ":=":
+                return new Token(TokenType.ASSIGN, ch, startPos, lineNumber);
                 break;
             default:
-                return new Token(TokenType.REST, str, lineNumber);
+                return new Token(TokenType.NONE, ch, startPos, lineNumber); // throw lexical error
                 break;
             
             }
 
         }
 
-        public bool isWhiteSpace(char ch)
+        private bool isWhiteSpace(char ch)
         {
             if (ch == ' ')
             {
                 return true;
             }
             return false;
+        }
+
+
+        private bool isEndofLine(char ch)
+        {
+            if (ch == '\n')
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private bool isNumeric(char ch)
+        {
+            if (!char.IsDigit(ch))
+                {
+                    return false;
+                }
+            return true;
+        }
+
+        private bool isNumberString(string str)
+        {
+            foreach (char ch in str)
+            {
+                if (!char.IsDigit(ch))
+                {
+                    return false;
+                }
+            }
+            
+            return true;
         }
     }
 }

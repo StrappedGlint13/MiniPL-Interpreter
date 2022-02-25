@@ -19,33 +19,38 @@ namespace LexerAnalysis
             PRINT,
             INT,
             STRING,
+            INTEGER,
             BOOL,
             ASSERT,
-            REST,
             ENDOFLINE,
             LPARENTHESES,
             RPARENTHESES,
             TYPE,
-            DOUBLEQUOTES
+            PUNCTUATION,
+            IDENTIFIER,
+            NONE,
+            ASSIGN,
+            DOUBLEDOTS,
         }
     
     public class Token
     {
         public TokenType terminal { get; set; }
-        public string lex { get; set; }
-
+        public object lex { get; set; }
+        public int startPos {get; set; }
         public int lineNumber { get; set; }
 
-        public Token(TokenType terminal, string lex, int lineNumber)
+        public Token(TokenType terminal, object lex, int startPos, int lineNumber)
         {
             this.terminal = terminal;
             this.lex = lex;
+            this.startPos = startPos;
             this.lineNumber = lineNumber;
         }
 
         public override string ToString()
         {
-            return base.ToString() + ": " + terminal.ToString() + " " + lex.ToString() + " " + lineNumber.ToString();
+            return base.ToString() + ": " + terminal.ToString() + " " + lex.ToString() + " startPos: " + startPos.ToString() + " line: " + lineNumber.ToString();
         }
     }
 }
