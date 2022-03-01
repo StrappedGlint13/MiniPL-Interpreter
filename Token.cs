@@ -1,4 +1,4 @@
-namespace LexerAnalysis
+namespace LexicalAnalysis
 {
     public enum TokenType 
         {
@@ -50,7 +50,7 @@ namespace LexerAnalysis
 
         public override string ToString()
         {
-            return base.ToString() + ": " + terminal.ToString() + " " + lex.ToString() + " startPos: " + startPos.ToString() + " line: " + lineNumber.ToString();
+            return "Token: " + terminal.ToString() +  " Value: " + lex.ToString() +  " at (" + lineNumber.ToString() + ", " + startPos.ToString() + ")";
         }
     }
 }

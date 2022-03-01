@@ -1,38 +1,28 @@
 using System;
 
-namespace LexerAnalysis
+namespace LexicalAnalysis
 {
     
-
     public class Scanner {
         public List<Token> Tokens { get; set; }
         private int lineNumber = 1;
         private int startPos = 1;
-
         private int currentPos = 0;
         private string currentToken = "";
-        
         private bool lineHasSemiColon = false; 
 
-        private static readonly Dictionary<string, TokenType> reservedWords = new Dictionary<string, TokenType>()
+        private readonly Dictionary<string, TokenType> reservedWords = new Dictionary<string, TokenType>()
         {
-            {"for", TokenType.FOR},
-            {"do", TokenType.DO},
-            {"end", TokenType.END},
-            {"in", TokenType.IN},
-            {"var", TokenType.VAR},
-            {"assert", TokenType.ASSERT},
-            {"print", TokenType.PRINT},
-            {"read", TokenType.READ},
-            {"bool", TokenType.BOOL},
-            {"string", TokenType.STRING},
-            {"int", TokenType.INT}
+            {"for", TokenType.FOR},{"do", TokenType.DO},{"end", TokenType.END},{"in", TokenType.IN},
+            {"var", TokenType.VAR},{"assert", TokenType.ASSERT},{"print", TokenType.PRINT},
+            {"read", TokenType.READ},{"bool", TokenType.BOOL},{"string", TokenType.STRING},{"int", TokenType.INT}
         };
 
-        public Scanner(string lines) {
-            Tokens = scan(lines);
+        public Scanner(string lines) 
+        {
+            Tokens = Scan(lines);
         }
-        public List<Token> scan(string s) 
+        public List<Token> Scan(string s) 
         {
             char[] line = s.ToCharArray();
             bool isString = false;
@@ -57,7 +47,7 @@ namespace LexerAnalysis
                     else
                     {
                         tokens.Add(new Token(TokenType.DOUBLEDOTS, currentToken+@char, startPos, lineNumber));
-                        move();
+                        NewToken();
                         continue;
                     }
                 }
@@ -69,25 +59,27 @@ namespace LexerAnalysis
                     continue;
                 }
 
-                if (isNumber && !isWhiteSpace(@char) && !(checkToken(@char.ToString(), startPos, lineNumber).terminal != TokenType.NONE))
+                if (isString) 
+                {
+                    isString = false;
+                    tokens.Add(new Token(TokenType.STRING, currentToken+@char, startPos, lineNumber));
+                    NewToken();
+                    continue;
+                } 
+
+
+                if (isNumber && !IsWhiteSpace(@char) && !(IdentifyOperator(@char.ToString(), startPos, lineNumber).terminal != TokenType.NONE))
                 {
                     currentToken += @char;
                     continue;
                 }
 
-                if (isString) 
-                {
-                    isString = false;
-                    tokens.Add(new Token(TokenType.STRING, currentToken+@char, startPos, lineNumber));
-                    move();
-                    continue;
-                } 
-
+            
                 if (isNumber) 
                 {
                     isNumber = false;
                     tokens.Add(new Token(TokenType.INTEGER, currentToken, startPos, lineNumber));
-                    move();
+                    NewToken();
                 }
                 
                 if (@char.Equals('t') && currentToken == "in" || @char.Equals(':') || (@char.Equals('=') && currentToken == ":")) 
@@ -97,33 +89,35 @@ namespace LexerAnalysis
                     continue;
                 }
        
-                if (isWhiteSpace(@char) || checkToken(currentToken, startPos, lineNumber).terminal != TokenType.NONE || 
-                reservedWords.ContainsKey(currentToken) || checkToken(@char.ToString(), startPos, lineNumber).terminal != TokenType.NONE) 
+                if (IsWhiteSpace(@char) || IdentifyOperator(currentToken, startPos, lineNumber).terminal != TokenType.NONE || 
+                reservedWords.ContainsKey(currentToken) 
+                || IdentifyOperator(@char.ToString(), startPos, lineNumber).terminal != TokenType.NONE) 
                 {
-                    if (checkToken(currentToken, startPos, lineNumber).terminal != TokenType.NONE) 
+                    if (IdentifyOperator(currentToken, startPos, lineNumber).terminal != TokenType.NONE) 
                     {
                         
-                        if (isNumberString(currentToken))
+                        if (IsNumberString(currentToken))
                         {
                             tokens.Add(new Token(TokenType.INTEGER, currentToken, startPos, lineNumber));
                             isNumber = false;
                         } else {
-                            tokens.Add(checkToken(currentToken, startPos, lineNumber));
+                            tokens.Add(IdentifyOperator(currentToken, startPos, lineNumber));
                         }
-                        if (isNumeric(@char)) {currentToken = @char.ToString(); isNumber = true;}
-                        move();
+                        if (IsNumberChar(@char)) {currentToken = @char.ToString(); isNumber = true;}
+                        NewToken();
                     } 
                     else
                     {
                         if (currentToken.Length > 0) {
                             tokens.Add(isIdentifierOrKeyWord(currentToken));
-                            move();
+                            NewToken();
                         }
 
-                        if (checkToken(@char.ToString(), startPos, lineNumber).terminal != TokenType.NONE)
+                        if (IdentifyOperator(@char.ToString(), startPos, lineNumber).terminal != TokenType.NONE)
                         {
-                            tokens.Add(checkToken(@char.ToString(), startPos, lineNumber));
-                            move();
+                            currentPos+=1;
+                            tokens.Add(IdentifyOperator(@char.ToString(), startPos, lineNumber));
+                            NewToken();
     
                             if (@char.Equals(';')) {
                                 lineHasSemiColon = true;
@@ -132,13 +126,13 @@ namespace LexerAnalysis
                     } 
                     
                 }
-                else if (!isWhiteSpace(@char) && !@char.Equals(';') && !isEndofLine(@char))
+                else if (!IsWhiteSpace(@char) && !@char.Equals(';') && !IsEndOfLine(@char))
                 {
                     if (@char.Equals('"')) isString = true;
-                    if (isNumeric(@char)) isNumber = true;
+                    if (IsNumberChar(@char)) isNumber = true;
                     currentToken += @char;
                 }
-                else if (isEndofLine(@char))
+                else if (IsEndOfLine(@char))
                 {
                     if (!lineHasSemiColon) Console.WriteLine("Lexical Error: Line {0} does not have semicolon at the end.", lineNumber);      
                     lineHasSemiColon = false;
@@ -168,64 +162,62 @@ namespace LexerAnalysis
             }
         }
 
-        public Token checkToken(string ch, int startPos, int lineNumber)
+        public Token IdentifyOperator(string str, int startPos, int lineNumber)
         { 
-            switch(ch) 
+            switch(str) 
             {
             case "+":
-                return new Token(TokenType.PLUS, ch, startPos, lineNumber);
+                return new Token(TokenType.PLUS, str, startPos, lineNumber);
                 break;
             case "-":
-                return new Token(TokenType.MINUS, ch, startPos, lineNumber);
+                return new Token(TokenType.MINUS, str, startPos, lineNumber);
                 break;
             case "*":
-                return new Token(TokenType.MULTIPLY, ch, startPos, lineNumber);
+                return new Token(TokenType.MULTIPLY, str, startPos, lineNumber);
                 break;
             case "/":
-                return new Token(TokenType.DIVIDE, ch, startPos, lineNumber);
+                return new Token(TokenType.DIVIDE, str, startPos, lineNumber);
                 break;
             case "<":
-                return new Token(TokenType.LESSTHAN, ch, startPos, lineNumber);
+                return new Token(TokenType.LESSTHAN, str, startPos, lineNumber);
                 break;
             case "=":
-                return new Token(TokenType.EQUALS, ch, startPos, lineNumber);
+                return new Token(TokenType.EQUALS, str, startPos, lineNumber);
                 break;
             case "&":
-                return new Token(TokenType.AND, ch, startPos, lineNumber);
+                return new Token(TokenType.AND, str, startPos, lineNumber);
                 break;
             case "!":
-                return new Token(TokenType.NOT, ch, startPos, lineNumber);
+                return new Token(TokenType.NOT, str, startPos, lineNumber);
                 break;
             case ";":
-                return new Token(TokenType.SEMICOLON, ch, startPos, lineNumber);
+                return new Token(TokenType.SEMICOLON, str, startPos, lineNumber);
                 break;
             case "(":
-                return new Token(TokenType.LPARENTHESES, ch, startPos, lineNumber);
+                return new Token(TokenType.LPARENTHESES, str, startPos, lineNumber);
                 break;
             case ")":
-                return new Token(TokenType.RPARENTHESES, ch, startPos, lineNumber);
+                return new Token(TokenType.RPARENTHESES, str, startPos, lineNumber);
                 break;
             case ":":
-                return new Token(TokenType.PUNCTUATION, ch, startPos, lineNumber);
+                return new Token(TokenType.PUNCTUATION, str, startPos, lineNumber);
                 break;
             case ":=":
-                return new Token(TokenType.ASSIGN, ch, startPos, lineNumber);
+                return new Token(TokenType.ASSIGN, str, startPos, lineNumber);
                 break;
             default:
-                return new Token(TokenType.NONE, ch, startPos, lineNumber); // throw lexical error
-                break;
-            
+                return new Token(TokenType.NONE, str, startPos, lineNumber);
+                break;     
             }
-
         }
 
-        private void move()
+        private void NewToken()
         {
            currentToken = "";
            startPos=currentPos;
         }
 
-        private bool isWhiteSpace(char ch)
+        private bool IsWhiteSpace(char ch)
         {
             if (ch == ' ')
             {
@@ -235,7 +227,7 @@ namespace LexerAnalysis
         }
 
 
-        private bool isEndofLine(char ch)
+        private bool IsEndOfLine(char ch)
         {
             if (ch == '\n')
             {
@@ -244,7 +236,7 @@ namespace LexerAnalysis
             return false;
         }
 
-        private bool isNumeric(char ch)
+        private bool IsNumberChar(char ch)
         {
             if (!char.IsDigit(ch))
                 {
@@ -253,7 +245,7 @@ namespace LexerAnalysis
             return true;
         }
 
-        private bool isNumberString(string str)
+        private bool IsNumberString(string str)
         {
             foreach (char ch in str)
             {
