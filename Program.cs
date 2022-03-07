@@ -2,6 +2,7 @@
 using System.IO;
 using LexicalAnalysis;
 using MiniPL_Interpreter.SyntaxAnalysis;
+using MiniPL_Interpreter.AST;
 
 namespace Mini_PL_Interpreter
 {
@@ -11,15 +12,14 @@ namespace Mini_PL_Interpreter
 public class Interpreter {
     
     public static void Main(string[] args) {
-        Console.Write("Enter the filename: ");
-        //string file = "2_example";
-        string file = Console.In.ReadLine();
+        //Console.Write("Enter the filename: ");
+        string file = "1_example";
+        //string file = Console.In.ReadLine();
 
-        string language = 
-        "";
+        string input = "";
         if (File.Exists(file)) {    
-            language = File.ReadAllText(file);
-            char[] line = language.ToCharArray();
+            input = File.ReadAllText(file);
+            char[] line = input.ToCharArray();
             foreach (char ch in line)
             {
                 Console.Write(ch);
@@ -28,7 +28,7 @@ public class Interpreter {
             Console.WriteLine("File does not exists");
         }
         Console.WriteLine("\n");
-        Scanner lex = new Scanner(language);
+        Scanner lex = new Scanner(input);
         Parser parser = new Parser(lex.Tokens);
 
         List<Token> tokens = lex.Tokens;
@@ -36,6 +36,13 @@ public class Interpreter {
         foreach (Token aPart in tokens)
         {
             Console.WriteLine(aPart);
+        }
+
+        List<ASTNode> ASTNodes = parser.tree;
+
+        foreach (ASTNode a in ASTNodes)
+        {
+            Console.WriteLine(a);
         }
     }
 }

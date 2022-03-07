@@ -1,4 +1,4 @@
-var nTimes : int := 0;
+var nTime23_s : int := 0;
 print "How many times?";
 read nTimes;
 var x : int;

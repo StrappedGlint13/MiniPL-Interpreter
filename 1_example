@@ -1,2 +1,4 @@
-var X : int := 44 + (1 * 2);
+var nTimes : int := ((44 + 1) * 2);
+var nTimes : int;
+print X;
 print X;
