@@ -47,6 +47,7 @@ namespace LexicalAnalysis
             this.startPos = startPos;
             this.lineNumber = lineNumber;
         }
+        
 
         public override string ToString()
         {

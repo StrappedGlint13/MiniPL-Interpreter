@@ -33,16 +33,16 @@ public class Interpreter {
 
         List<Token> tokens = lex.Tokens;
         
-        foreach (Token aPart in tokens)
+        foreach (Token t in tokens)
         {
-            Console.WriteLine(aPart);
+            Console.WriteLine(t);
         }
 
         List<ASTNode> ASTNodes = parser.tree;
 
-        foreach (ASTNode a in ASTNodes)
+        foreach (ASTNode n in ASTNodes)
         {
-            Console.WriteLine(a);
+            Console.WriteLine(n);
         }
     }
 }

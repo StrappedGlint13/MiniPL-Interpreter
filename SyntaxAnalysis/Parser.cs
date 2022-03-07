@@ -13,10 +13,11 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
         private Token currentToken;
         public List<ASTNode> tree {get; set;}
 
-        private List<string> identifiers;
+        private List<object> identifiers;
         private readonly List<TokenType> operands = new List<TokenType>()
         {
-            {TokenType.PLUS}, {TokenType.MINUS}, {TokenType.MULTIPLY}, {TokenType.DIVIDE}
+            {TokenType.PLUS}, {TokenType.MINUS}, {TokenType.MULTIPLY}, {TokenType.DIVIDE},
+            {TokenType.EQUALS}
         };
         private bool EOF;
 
@@ -24,6 +25,7 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
         {
             this.tokens = tokens;
             this.tree = new List<ASTNode>();
+            this.identifiers = new List<object>();
             this.currentIndex = 0;
             this.currentToken = tokens[currentIndex];
             //createAST();
@@ -34,16 +36,19 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
         {
             while(!EOF)
             {
-                tree.Add(Statement()); 
+                ASTNode astNode = Statement();
+                if (astNode != null) tree.Add(astNode); 
                 match(CurrentToken().terminal, TokenType.SEMICOLON, "';', '(...)' or assignment");
             }
         }
         public ASTNode Statement()
         {   
+            ASTNode expression = null;
+            Token currentStmt = CurrentToken();
             switch(CurrentToken().terminal) 
                 {
                 case TokenType.VAR: 
-                    Token var = CurrentToken();
+                    currentStmt = CurrentToken();
                     nextToken();
                     Token id = matchId();
                     match(CurrentToken().terminal, TokenType.PUNCTUATION, ':');
@@ -51,23 +56,65 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
                     if (CurrentToken().terminal == TokenType.ASSIGN) 
                     {
                         nextToken();
-                        ASTNode expression = ExprVariableDeclaration();
-                        return new VarDeclarationStmt(id, type, var, expression);
+                        expression = ExprVariableDeclaration();
+                        return new VarAssignmentStmt(id, type, currentStmt, expression);
                         break;
                     }
-                    return new VarStmt(id, type, var); 
+                    return new VarStmt(id, type, currentStmt); 
+                    break;
+                case TokenType.IDENTIFIER: 
+                    currentStmt = CurrentToken();
+                    /*
+                    if (!identifiers.Any(ident => ident.Equals(identifier.lex)))
+                    {
+                        Console.WriteLine("Syntax Error: " + CurrentToken().terminal + " at (" + CurrentToken().lineNumber  + ", " + CurrentToken().startPos + ")");
+                    }*/
+                    nextToken();
+                    match(CurrentToken().terminal, TokenType.ASSIGN, ":=");
+                    expression = ExprVariableDeclaration();
+                    return new VariableStmt(currentStmt, expression);
                     break;
                 case TokenType.PRINT: 
+                    currentStmt = CurrentToken();
                     nextToken();
-                    Operand();
-                    return null;
-                    break;
+                    expression = ExprVariableDeclaration();
+                    return new PrintStmt(currentStmt, expression);
+                case TokenType.READ: 
+                    currentStmt = CurrentToken();
+                    nextToken();
+                    Token identifier = matchId();
+                    return new ReadStmt(currentStmt, identifier);
+                case TokenType.ASSERT: 
+                    currentStmt = CurrentToken();
+                    nextToken();
+                    match(CurrentToken().terminal, TokenType.LPARENTHESES, "(");
+                    expression = ExprVariableDeclaration();
+                    match(CurrentToken().terminal, TokenType.RPARENTHESES, ")");
+                    return new AssertStmt(currentStmt, expression);
+                case TokenType.FOR: 
+                    currentStmt = CurrentToken();
+                    nextToken();
+                    Token idFor = matchId();
+                    match(CurrentToken().terminal, TokenType.IN, "in");
+                    expression = ExprVariableDeclaration();
+                    match(CurrentToken().terminal, TokenType.DOUBLEDOTS, "..");
+                    ASTNode endingExpression = ExprVariableDeclaration(); 
+                    match(CurrentToken().terminal, TokenType.DO, "DO");
+                    List<ASTNode> forTree = new List<ASTNode>();
+                    while (CurrentToken().terminal != TokenType.END)
+                    {
+                       ASTNode forNode = Statement();
+                       if (forNode != null) forTree.Add(forNode); 
+                       match(CurrentToken().terminal, TokenType.SEMICOLON, "';', '(...)' or assignment");
+                    }
+                    match(CurrentToken().terminal, TokenType.END, "END");
+                    match(CurrentToken().terminal, TokenType.FOR, "FOR");
+                    return new ForStmt(currentStmt, idFor, expression, endingExpression, forTree);
                 default:
-                    return null;
+                    return new AssertStmt(currentStmt, expression);;
                     break;     
                 }
         }
-
 
         public ASTNode ExprVariableDeclaration() 
         {
@@ -127,11 +174,12 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
             {
                 Token t = CurrentToken();
                 nextToken();
-                return t;            } 
+                return t;            
+            } 
             else 
             {
-                return null;
                 Console.WriteLine("Syntax error at (" + CurrentToken().lineNumber  + ", " + CurrentToken().startPos + "). Excpected: \"" + lex + "\"");
+                return null;
             }
         }
 
@@ -140,6 +188,7 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
             if (CurrentToken().terminal == TokenType.IDENTIFIER) 
             {   
                 Token t = CurrentToken();
+                identifiers.Add(t.lex);
                 nextToken();
                 return t;
             } 
