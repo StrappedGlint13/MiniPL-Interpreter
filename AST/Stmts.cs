@@ -5,26 +5,26 @@ namespace MiniPL_Interpreter.AST
 {
     public class VarStmt : ASTNode
     {
-        private IdentifierAST identifier {get; set;}
-        private TypeAST type {get; set;}
+        private IdentifierAST Identifier {get; set;}
+        private TypeAST Type {get; set;}
 
-        public VarStmt(Token statement, IdentifierAST identifier, TypeAST type) : base(statement)
+        public VarStmt(Token statement, IdentifierAST Identifier, TypeAST Type) : base(statement)
         { 
-            this.type = type;
-            this.identifier = identifier;
+            this.Type = Type;
+            this.Identifier = Identifier;
         }
     }
     public class VarAssignmentStmt : ASTNode
     {
-        private IdentifierAST identifier {get; set;}
-        private TypeAST type {get; set;}
-        private ASTNode expression;
+        public IdentifierAST Identifier {get; set;}
+        public TypeAST Type {get; set;}
+        public ASTNode expression;
 
-        public VarAssignmentStmt(Token statement, IdentifierAST identifier, TypeAST type, ASTNode expression) : base(statement)
+        public VarAssignmentStmt(Token statement, IdentifierAST Identifier, TypeAST Type, ASTNode expression) : base(statement)
         {
             
-            this.type = type;
-            this.identifier = identifier;
+            this.Type = Type;
+            this.Identifier = Identifier;
             this.expression = expression;
         }
     }

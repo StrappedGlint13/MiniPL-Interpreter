@@ -39,10 +39,95 @@ public class Interpreter {
         }
 
         List<ASTNode> ASTNodes = parser.tree;
-
+        Console.WriteLine("Abstract Syntax Tree:");
+        Console.WriteLine("stmts");
         foreach (ASTNode n in ASTNodes)
         {
-            Console.WriteLine(n);
+            CreateAST(n, "", false);
         }
+
+        
+    }
+    public static void CreateAST(ASTNode node, string indent, bool last)
+    {
+        if (last)
+        {
+            Console.Write("\\-");
+            indent += "  ";
+        }
+        else
+        {
+            Console.WriteLine("|-" + node.token.lex + "_stmt");
+        }
+        if (node.token.terminal == TokenType.VAR)
+        {
+            CreateVarAssignment(node, "  ", last);
+        }
+        
+        /*
+        for (int i = 0; i < Children.Count; i++)
+            Children[i].PrintPretty(indent, i == Children.Count - 1);
+        */
+    }
+
+    public static void CreateVarAssignment(ASTNode node, string indent, bool last)
+    {
+        string rightIndent = indent;
+
+        Console.WriteLine("|  \\");
+        NextLeft(indent);
+        Console.WriteLine(((VarAssignmentStmt)node).Identifier.token.lex);
+        NextLeft(indent);
+        Console.WriteLine(((VarAssignmentStmt)node).Type.token.lex);
+        
+        
+        if (((VarAssignmentStmt)node).expression != null)
+        {
+            ExprVar expression = ((ExprVar)((VarAssignmentStmt)node).expression);
+            OperandAST operand = null;
+            while (true)
+            {
+                
+                rightIndent = nextRight(indent);
+                indent = rightIndent;
+                Console.WriteLine(expression.token.lex);
+                NextLeft(rightIndent);
+                Console.WriteLine(expression.left.token.lex);
+
+                if (expression.left.GetType() == typeof(ExprVar))
+                {
+                    rightIndent = nextRight(rightIndent);
+                    Console.WriteLine(expression.right.token.lex);
+                    expression = ((ExprVar)expression.left);
+                    
+                }
+                else if (expression.right.GetType() == typeof(ExprVar))
+                {
+                    expression = ((ExprVar)expression.right);
+                }
+                else 
+                {
+                    rightIndent = nextRight(rightIndent);
+                    Console.WriteLine(expression.right.token.lex);
+                    break;
+                }
+            }
+        }
+    }
+
+    public static void NextLeft(string indent)
+    {
+        Console.Write("|");
+        Console.Write(indent + "|-");
+    }
+
+    public static string nextRight(string indent)
+    {
+        Console.Write("|");
+        Console.Write(indent);
+        Console.WriteLine(" \\");
+        Console.Write("|");
+        Console.Write(indent + "  |-");
+        return indent + "  ";
     }
 }
