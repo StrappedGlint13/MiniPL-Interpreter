@@ -7,12 +7,9 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
     public class Parser
     {
         private List<Token> tokens;
-
         private int currentIndex;
-
         private Token currentToken;
         public List<ASTNode> tree {get; set;}
-
         private List<object> identifiers;
         private readonly List<TokenType> operands = new List<TokenType>()
         {
@@ -50,17 +47,17 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
                 case TokenType.VAR: 
                     currentStmt = CurrentToken();
                     nextToken();
-                    Token id = matchId();
+                    IdentifierAST id = matchId();
                     match(CurrentToken().terminal, TokenType.PUNCTUATION, ':');
-                    Token type = Type();
+                    TypeAST type = Type();
                     if (CurrentToken().terminal == TokenType.ASSIGN) 
                     {
                         nextToken();
                         expression = ExprVariableDeclaration();
-                        return new VarAssignmentStmt(id, type, currentStmt, expression);
+                        return new VarAssignmentStmt(currentStmt, id, type, expression);
                         break;
                     }
-                    return new VarStmt(id, type, currentStmt); 
+                    return new VarStmt(currentStmt, id, type); 
                     break;
                 case TokenType.IDENTIFIER: 
                     currentStmt = CurrentToken();
@@ -82,7 +79,7 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
                 case TokenType.READ: 
                     currentStmt = CurrentToken();
                     nextToken();
-                    Token identifier = matchId();
+                    IdentifierAST identifier = matchId();
                     return new ReadStmt(currentStmt, identifier);
                 case TokenType.ASSERT: 
                     currentStmt = CurrentToken();
@@ -94,7 +91,7 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
                 case TokenType.FOR: 
                     currentStmt = CurrentToken();
                     nextToken();
-                    Token idFor = matchId();
+                    IdentifierAST idFor = matchId();
                     match(CurrentToken().terminal, TokenType.IN, "in");
                     expression = ExprVariableDeclaration();
                     match(CurrentToken().terminal, TokenType.DOUBLEDOTS, "..");
@@ -183,14 +180,14 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
             }
         }
 
-        public Token matchId()
+        public IdentifierAST matchId()
         {
             if (CurrentToken().terminal == TokenType.IDENTIFIER) 
             {   
                 Token t = CurrentToken();
                 identifiers.Add(t.lex);
                 nextToken();
-                return t;
+                return new IdentifierAST(t);
             } 
             else 
             {
@@ -215,30 +212,22 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
             else this.currentToken = tokens[currentIndex];
         }
 
-
-        public void ExprPrint() 
-        {
-
-        }
-
-
-
-        public Token Type()
+        public TypeAST Type()
         {
             Token t = CurrentToken();
             switch(CurrentToken().terminal) 
                 {
                 case TokenType.STRING:
                     nextToken();
-                    return t;  
+                    return new TypeAST(t); 
                     break;
                 case TokenType.INT:
                     nextToken();
-                    return t;  
+                    return new TypeAST(t);
                     break;
                 case TokenType.BOOL:
                     nextToken();
-                    return t;  
+                    return new TypeAST(t);
                     break;
                 default:
                     return null;

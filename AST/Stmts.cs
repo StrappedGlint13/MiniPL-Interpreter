@@ -5,24 +5,22 @@ namespace MiniPL_Interpreter.AST
 {
     public class VarStmt : ASTNode
     {
-        private Token identifier {get; set;}
-        private Token type {get; set;}
+        private IdentifierAST identifier {get; set;}
+        private TypeAST type {get; set;}
 
-        public VarStmt(Token identifier, Token type, Token var) : base(var)
-        {
-            
+        public VarStmt(Token statement, IdentifierAST identifier, TypeAST type) : base(statement)
+        { 
             this.type = type;
             this.identifier = identifier;
         }
     }
     public class VarAssignmentStmt : ASTNode
     {
-        private Token identifier {get; set;}
-        private Token type {get; set;}
-
+        private IdentifierAST identifier {get; set;}
+        private TypeAST type {get; set;}
         private ASTNode expression;
 
-        public VarAssignmentStmt(Token identifier, Token type, Token token, ASTNode expression) : base(token)
+        public VarAssignmentStmt(Token statement, IdentifierAST identifier, TypeAST type, ASTNode expression) : base(statement)
         {
             
             this.type = type;
@@ -43,19 +41,19 @@ namespace MiniPL_Interpreter.AST
 
     public class PrintStmt : ASTNode
     {
-        private ASTNode expression;
+        private ASTNode right;
 
         public PrintStmt(Token statement, ASTNode expression) : base(statement)
         {
-            this.expression = expression;
+            this.right = expression;
         }
     }
 
     public class ReadStmt : ASTNode
     {
-        private Token identifier;
+        private IdentifierAST identifier;
 
-        public ReadStmt(Token statement, Token identifier) : base(statement)
+        public ReadStmt(Token statement, IdentifierAST identifier) : base(statement)
         {
             this.identifier = identifier;
         }
@@ -75,11 +73,11 @@ namespace MiniPL_Interpreter.AST
     {
         private ASTNode startingCondition;
         private ASTNode endingCondition;
-        private Token identifier;
+        private ASTNode identifier;
         private List<ASTNode> forTree;
 
 
-        public ForStmt(Token statement, Token identifier, ASTNode startingCondition, ASTNode endingCondition
+        public ForStmt(Token statement, ASTNode identifier, ASTNode startingCondition, ASTNode endingCondition
         , List<ASTNode> forTree) : base(statement)
         {
             this.identifier = identifier;
