@@ -3,6 +3,7 @@ using System.IO;
 using LexicalAnalysis;
 using MiniPL_Interpreter.SyntaxAnalysis;
 using MiniPL_Interpreter.AST;
+using MiniPL_Interpreter.SemanticAnalysis;
 
 namespace Mini_PL_Interpreter
 {
@@ -32,21 +33,33 @@ public class Interpreter {
         Parser parser = new Parser(lex.Tokens);
 
         List<Token> tokens = lex.Tokens;
-        
-        foreach (Token t in tokens)
-        {
-            Console.WriteLine(t);
-        }
-
         List<ASTNode> ASTNodes = parser.tree;
-        Console.WriteLine("Abstract Syntax Tree:");
-        Console.WriteLine("stmts");
-        foreach (ASTNode n in ASTNodes)
-        {
-            CreateAST(n, "", false);
-        }
 
-        
+        if (parser.HaveSyntaxErrors || parser.HaveSemanticErrors) 
+        {
+            Console.WriteLine("Build failed.");
+        }
+        else 
+        {
+            SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(ASTNodes);
+            semanticAnalyzer.AnalyzeSemantics(ASTNodes);
+
+            if (semanticAnalyzer.HaveSemanticErrors) 
+            {
+                Console.WriteLine("Build failed.");
+            } else {
+                foreach (Token t in tokens)
+                {
+                    Console.WriteLine(t);
+                }
+                Console.WriteLine("Abstract Syntax Tree:");
+                Console.WriteLine("stmts");
+                foreach (ASTNode n in ASTNodes)
+                {
+                    CreateAST(n, "", false);
+                }
+            } 
+        }  
     }
     public static void CreateAST(ASTNode node, string indent, bool last)
     {
@@ -63,11 +76,11 @@ public class Interpreter {
         {
             CreateVarAssignment(node, "  ", last);
         }
-        
-        /*
-        for (int i = 0; i < Children.Count; i++)
-            Children[i].PrintPretty(indent, i == Children.Count - 1);
-        */
+
+        if (node.token.terminal == TokenType.PRINT)
+        {
+            CreatePrint(node, "  ", last);
+        }
     }
 
     public static void CreateVarAssignment(ASTNode node, string indent, bool last)
@@ -76,10 +89,13 @@ public class Interpreter {
 
         Console.WriteLine("|  \\");
         NextLeft(indent);
-        Console.WriteLine(((VarAssignmentStmt)node).Identifier.token.lex);
-        NextLeft(indent);
-        Console.WriteLine(((VarAssignmentStmt)node).Type.token.lex);
-        
+        if (node.GetType() == typeof(VarStmt));
+        {
+            Console.WriteLine(((VarStmt)node).identifier.token.lex);
+            NextLeft(indent);
+            Console.WriteLine(((VarStmt)node).type.token.lex);
+            return;
+        }
         
         if (((VarAssignmentStmt)node).expression != null)
         {
@@ -113,6 +129,17 @@ public class Interpreter {
                 }
             }
         }
+    }
+
+    public static void CreatePrint(ASTNode node, string indent, bool last)
+    {
+        string rightIndent = indent;
+        Console.WriteLine("|  \\");
+        NextLeft(indent);
+        Console.WriteLine(((PrintStmt)node).token.lex);
+        OperandAST operand =   ((OperandAST)((PrintStmt)node).right);
+        rightIndent = nextRight(rightIndent);
+        Console.WriteLine(operand.token.lex);
     }
 
     public static void NextLeft(string indent)

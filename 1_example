@@ -1,1 +1,2 @@
-var nTimes : int := (4 + (2 * 6));
+var ntimes : int;
+print "How many times?";
