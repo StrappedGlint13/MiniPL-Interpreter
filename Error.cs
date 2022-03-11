@@ -20,6 +20,12 @@ namespace Mini_PL_Interpreter
             return true;
         }
 
+        public bool LexicalError(string msg)
+        {
+            Console.WriteLine("Lexical Error: " + msg);
+            return true;
+        }
+
         public bool ExpectedError(int lineNumber, int startPos, object lex)
         {
             Console.WriteLine("Syntax error at (" + lineNumber  + ", " + startPos + "). Excpected: \"" + lex + "\"");

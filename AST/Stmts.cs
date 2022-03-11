@@ -31,7 +31,7 @@ namespace MiniPL_Interpreter.AST
 
     public class VariableStmt : ASTNode
     {
-        private ASTNode expression;
+        public ASTNode expression;
 
         public VariableStmt(Token statement, ASTNode expression) : base(statement)
         {

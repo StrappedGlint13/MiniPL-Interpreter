@@ -1,9 +1,10 @@
 using System;
+using Mini_PL_Interpreter;
 
 namespace LexicalAnalysis
 {
     
-    public class Scanner {
+    public class Scanner : Error {
         public List<Token> Tokens { get; set; }
         private int lineNumber = 1;
         private int startPos = 1;
@@ -144,8 +145,7 @@ namespace LexicalAnalysis
                 {
                     if (!lineHasSemiColon)  
                     {
-                        Console.WriteLine("Lexical Error: Line {0} does not have semicolon at the end.", lineNumber); 
-                        hasLexicalErrors = true;      
+                        hasLexicalErrors = LexicalError("Line " + lineNumber + " does not have semicolon at the end.");      
                         lineHasSemiColon = false;
                         currentToken = "";
                         lineNumber++;
@@ -160,8 +160,7 @@ namespace LexicalAnalysis
                 }         
             }
             if (!s[s.Length-1].Equals(';') && !s[s.Length-1].Equals('\n')) {
-                Console.WriteLine("Lexical Error: Line {0} does not have semicolon at the end.", lineNumber); 
-                hasLexicalErrors = true;     
+                hasLexicalErrors = LexicalError("Line " + lineNumber + " does not have semicolon at the end.");     
             } 
              
             return tokens;

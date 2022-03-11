@@ -23,7 +23,7 @@ namespace MiniPL_Interpreter.SemanticAnalysis
                 switch(node.token.terminal) 
                 {
                 case TokenType.VAR: AnalyzeVarStmt(node); break;
-                case TokenType.IDENTIFIER: break;
+                case TokenType.IDENTIFIER: AnalyzeIdentifier((VariableStmt)node); break;
                 case TokenType.PRINT: AnalyzePrint((PrintStmt)node); break;
                 case TokenType.READ:  break;
                 case TokenType.ASSERT:  break;
@@ -35,6 +35,27 @@ namespace MiniPL_Interpreter.SemanticAnalysis
                 }
             }
         }
+
+        public void AnalyzeIdentifier(VariableStmt stmt)
+        {
+            ASTNode or = ((ASTNode)stmt);
+            object value = or.value;
+            Console.WriteLine(value);
+            identifierIsAlreadyInUse(stmt.token.lex, value, stmt.token.lineNumber, stmt.token.startPos);
+        }
+
+        public void identifierIsAlreadyInUse(object lex, object value, int lineNumber, int startPos)
+        {
+            if (!identifiers.ContainsKey(lex))
+            {
+            identifiers.Add(lex, value);
+            }
+            else
+            {
+            HasSemanticErrors = SemanticError("There are too many arguments on print statement", lineNumber, startPos);
+            }       
+        }
+
         public void AnalyzeVarStmt(ASTNode stmt)
         {
             if (stmt.GetType() == typeof(VarStmt)) 
@@ -42,26 +63,12 @@ namespace MiniPL_Interpreter.SemanticAnalysis
                 VarStmt varStmt = ((VarStmt) stmt); 
                 TypeCheckAll((TypeAST)varStmt.type);
                 IdentifierAST identifier = ((IdentifierAST)varStmt.identifier);
-                if (!identifiers.ContainsKey(identifier.token.lex))
-                {
-                identifiers.Add(identifier.token.lex, 0);
-                }
-                else
-                {
-                HasSemanticErrors = SemanticError("There are too many arguments on print statement", stmt.token.lineNumber, stmt.token.startPos);
-                }       
+                identifierIsAlreadyInUse(identifier.token.lex, null, stmt.token.lineNumber, stmt.token.startPos);
             } else {
                 VarAssignmentStmt varStmt = ((VarAssignmentStmt) stmt); 
                 TypeCheckAll((TypeAST)varStmt.type);
                 IdentifierAST identifier = ((IdentifierAST)varStmt.identifier);
-                if (!identifiers.ContainsKey(identifier.token.lex))
-                {
-                identifiers.Add(identifier.token.lex, 0);
-                }
-                else
-                {
-                HasSemanticErrors = SemanticError("There are too many arguments on print statement", stmt.token.lineNumber, stmt.token.startPos);
-                }
+                identifierIsAlreadyInUse(identifier.token.lex, null, stmt.token.lineNumber, stmt.token.startPos);
             }
         }
 

@@ -20,7 +20,7 @@ namespace MiniPL_Interpreter.AST
 
     public class OperandAST : ASTNode
     {
-        private object value;
+        public object value;
 
         public OperandAST (Token token, object lexeme) : base(token)
         {
