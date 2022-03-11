@@ -2,11 +2,11 @@ using LexicalAnalysis;
 using MiniPL_Interpreter.AST;
 using System.Collections.Generic;
 using System;
-using MiniPL_Interpreter.AST;
+using Mini_PL_Interpreter;
 
 namespace MiniPL_Interpreter.SemanticAnalysis
 {
-    public class SemanticAnalyzer {
+    public class SemanticAnalyzer : Error {
         private List<ASTNode> ASTNodes;
         public bool HasSemanticErrors;
         public Dictionary<object, object> identifiers;
@@ -48,8 +48,7 @@ namespace MiniPL_Interpreter.SemanticAnalysis
                 }
                 else
                 {
-                HasSemanticErrors = true;
-                Console.WriteLine("Semantic Error: Identifiers can be declared once only. At (" + identifier.token.lineNumber + ", " + identifier.token.startPos + ")");
+                HasSemanticErrors = SemanticError("There are too many arguments on print statement", stmt.token.lineNumber, stmt.token.startPos);
                 }       
             } else {
                 VarAssignmentStmt varStmt = ((VarAssignmentStmt) stmt); 
@@ -61,27 +60,30 @@ namespace MiniPL_Interpreter.SemanticAnalysis
                 }
                 else
                 {
-                HasSemanticErrors = true;
-                Console.WriteLine("Semantic Error: Identifiers can be declared once only. At (" + identifier.token.lineNumber + ", " + identifier.token.startPos + ")");
+                HasSemanticErrors = SemanticError("There are too many arguments on print statement", stmt.token.lineNumber, stmt.token.startPos);
                 }
             }
         }
 
         public void TypeCheckAll(TypeAST type)
         {
+            if (type == null) return;
+            
             TokenType terminal = type.token.terminal;
             if (terminal != TokenType.INT && terminal != TokenType.STRING 
             && terminal != TokenType.BOOL)
             {
-                HasSemanticErrors = true;
-                Console.WriteLine("Error: Type should be integer, string or bool.");
+                HasSemanticErrors = ErrorMessage("Error: Type should be integer, string or bool.");
             }
         }
 
         public void AnalyzePrint(PrintStmt stmt)
         {
             
-            if (stmt.right == null) return;
+            if (stmt.right == null) {
+                HasSemanticErrors = SemanticError("No argument given for print", stmt.token.lineNumber, stmt.token.startPos);
+                return;
+            }
 
             if (stmt.right.GetType() == typeof(OperandAST))
             {
@@ -92,35 +94,21 @@ namespace MiniPL_Interpreter.SemanticAnalysis
                 }
                 
                 if (!node.terminal.Equals(TokenType.STRING)
-                && !node.terminal.Equals(TokenType.INT) && !node.terminal.Equals(TokenType.IDENTIFIER))
+                && !node.terminal.Equals(TokenType.INTEGER) && !node.terminal.Equals(TokenType.IDENTIFIER))
                 {
-                    SemanticError("Type error: Print value should be identified, string literal or number", node.lineNumber, node.startPos);
+                    HasSemanticErrors = SemanticError("Type error: Print value should be identified, string literal or number", node.lineNumber, node.startPos);
                 }
             } else {
-                SemanticError("There are too many arguments on print statement", stmt.token.lineNumber, stmt.token.startPos);
+                HasSemanticErrors = SemanticError("There are too many arguments on print statement", stmt.token.lineNumber, stmt.token.startPos);
             }
         }
             
         public void isDeclaredGlobally(object lex)
         {
-            Console.WriteLine(identifiers.ContainsKey(lex));
             if (!identifiers.ContainsKey(lex)) 
             {
-                Console.WriteLine("Declaration error: Identifier \"" + lex + "\" is not declared before use.");
-                HasSemanticErrors = true;
+                HasSemanticErrors = ErrorMessage("Declaration error: Identifier \"" + lex + "\" is not declared before use.");
             }
-        }
-
-        public void SemanticError(string msg, int lineNumber, int startPos)
-        {
-            Console.WriteLine("Semantic Error: " + msg + " at (" + lineNumber + ", " + startPos + ")");
-            HasSemanticErrors = true;
-        }
-
-        public void TypeError(string msg, int lineNumber, int startPos)
-        {
-            Console.WriteLine("Type Error: " + msg + " at (" + lineNumber + ", " + startPos + ")");
-            HasSemanticErrors = true;
         }
     }
 

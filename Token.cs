@@ -25,7 +25,6 @@ namespace LexicalAnalysis
             SEMICOLON,
             LPARENTHESES,
             RPARENTHESES,
-            TYPE,
             PUNCTUATION,
             IDENTIFIER,
             NONE,

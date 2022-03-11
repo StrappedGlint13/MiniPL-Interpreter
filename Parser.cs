@@ -2,10 +2,11 @@ using LexicalAnalysis;
 using MiniPL_Interpreter.AST;
 using System.Collections.Generic;
 using MiniPL_Interpreter.SemanticAnalysis;
+using Mini_PL_Interpreter;
 
 namespace MiniPL_Interpreter.SyntaxAnalysis
 {
-    public class Parser
+    public class Parser : Error
     {
         private List<Token> tokens;
         private int currentIndex;
@@ -55,6 +56,7 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
             Token currentStmt = CurrentToken();
             switch(CurrentToken().terminal) 
                 {
+                case TokenType.SEMICOLON: return null; break;
                 case TokenType.VAR: 
                     currentStmt = CurrentToken();
                     nextToken();
@@ -104,7 +106,7 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
                     ASTNode endingExpression = ExprVariableDeclaration(); 
                     match(CurrentToken().terminal, TokenType.DO, "DO");
                     List<ASTNode> forTree = new List<ASTNode>();
-                    while (CurrentToken().terminal != TokenType.END)
+                    while (CurrentToken().terminal != TokenType.END && !HasSyntaxErrors) // this check is here for avoiding cascading errors
                     {
                        ASTNode forNode = Statement();
                        if (forNode != null) forTree.Add(forNode); 
@@ -114,12 +116,14 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
                     match(CurrentToken().terminal, TokenType.FOR, "FOR");
                     return new ForStmt(currentStmt, idFor, expression, endingExpression, forTree);
                 default:
-                    Console.WriteLine("Semantic Error: You can't start a line with " + CurrentToken().terminal + ". At (" + CurrentToken().lineNumber  + ", " + CurrentToken().startPos + ")");
-                    HasSemanticErrors = true;
+                    HasSemanticErrors = SemanticError("Semantic Error: You can't start a statement or expression with " + CurrentToken().terminal, 
+                    CurrentToken().lineNumber, CurrentToken().startPos);
                     return null;
                     break;     
                 }
         }
+
+        
 
         public ASTNode ExprVariableDeclaration() 
         {
@@ -129,7 +133,7 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
             if (left == null) return null;
 
             if (CurrentToken().terminal == TokenType.SEMICOLON || 
-            CurrentToken().terminal == TokenType.DOUBLEDOTS)
+            CurrentToken().terminal == TokenType.DOUBLEDOTS || CurrentToken().terminal == TokenType.DO)
             {
                 return left;
             }
@@ -140,9 +144,27 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
             {
                 op = CurrentToken();
                 nextToken();
+            }
+
+            if (op == null)
+            {
+                HasSyntaxErrors = SyntaxError("No operand provided", CurrentToken().lineNumber, CurrentToken().startPos);
             } 
             ASTNode right = Operand();
             return new ExprVar(left, op, right);
+        }
+
+        public void Recover(int el)
+        {
+            while(CurrentToken().lineNumber == el)
+            {             
+                // if last token
+                if (CurrentToken().startPos == tokens[tokens.Count-1].startPos)
+                {
+                    break;
+                }
+                nextToken();
+            }
         }
 
         public ASTNode Operand() 
@@ -169,8 +191,7 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
                     return expression;
                     break;
                 default:
-                    Console.WriteLine("Syntax Error: " + CurrentToken().terminal + " at (" + CurrentToken().lineNumber  + ", " + CurrentToken().startPos + ")");
-                    HasSyntaxErrors = true;
+                    HasSyntaxErrors = SyntaxError("No suitable operand provided", CurrentToken().lineNumber, CurrentToken().startPos);
                     return null;
                     break;     
                 }
@@ -187,8 +208,7 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
             } 
             else 
             {
-                Console.WriteLine("Syntax error at (" + CurrentToken().lineNumber  + ", " + CurrentToken().startPos + "). Excpected: \"" + lex + "\"");
-                HasSyntaxErrors = true;
+                HasSyntaxErrors = ExpectedError(CurrentToken().lineNumber, CurrentToken().startPos, lex);;
                 return null;
             }
         }
@@ -204,8 +224,7 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
             } 
             else 
             {
-                Console.WriteLine("Error: Not identifier defined at (" + CurrentToken().lineNumber  + ", " + CurrentToken().startPos + ")");
-                HasSyntaxErrors = true;
+                HasSyntaxErrors = SyntaxError("Not identifier defined", CurrentToken().lineNumber, CurrentToken().startPos);
                 return null;
             }
         }
@@ -223,15 +242,8 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
                 EOF = true; 
             } 
             
+            
             else this.currentToken = tokens[currentIndex];
-        }
-
-        public void Recover(int el)
-        {
-            while(CurrentToken().lineNumber == el)
-            {
-                nextToken();
-            }
         }
 
         public TypeAST Type()
@@ -252,8 +264,7 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
                     return new TypeAST(t);
                     break;
                 default:
-                    Console.WriteLine("Error: Not valid type at (" + CurrentToken().lineNumber  + ", " + CurrentToken().startPos + ")");  
-                    HasSyntaxErrors = true;
+                    HasSyntaxErrors = SyntaxError("Not valid type", CurrentToken().lineNumber, CurrentToken().startPos);
                     return null;
                     break;
                 }

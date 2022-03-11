@@ -12,7 +12,7 @@ namespace LexicalAnalysis
         private bool lineHasSemiColon = false; 
         public bool hasLexicalErrors;
 
-        private readonly Dictionary<string, TokenType> reservedWords = new Dictionary<string, TokenType>()
+        private Dictionary<string, TokenType> reservedWords = new Dictionary<string, TokenType>()
         {
             {"for", TokenType.FOR},{"do", TokenType.DO},{"end", TokenType.END},{"in", TokenType.IN},
             {"var", TokenType.VAR},{"assert", TokenType.ASSERT},{"print", TokenType.PRINT},
@@ -33,7 +33,7 @@ namespace LexicalAnalysis
             foreach (char @char in line)
             {
                 currentPos+=1;
-                
+        
                 // doubleDot
                 if (@char.Equals('.'))
                 {                
@@ -112,6 +112,13 @@ namespace LexicalAnalysis
                         if (currentToken.Length > 0) {
                             tokens.Add(isIdentifierOrKeyWord(currentToken));
                             NewToken();
+                            // line break
+                            if (@char.Equals('\n'))
+                            {
+                                lineNumber+=1;
+                                startPos=1;
+                                continue;
+                            }
                         }
 
                         if (IdentifyOperator(@char.ToString(), startPos, lineNumber).terminal != TokenType.NONE)
@@ -135,15 +142,28 @@ namespace LexicalAnalysis
                 }
                 else if (IsEndOfLine(@char))
                 {
-                    if (!lineHasSemiColon) Console.WriteLine("Lexical Error: Line {0} does not have semicolon at the end.", lineNumber); hasLexicalErrors = true;      
+                    if (!lineHasSemiColon)  
+                    {
+                        Console.WriteLine("Lexical Error: Line {0} does not have semicolon at the end.", lineNumber); 
+                        hasLexicalErrors = true;      
+                        lineHasSemiColon = false;
+                        currentToken = "";
+                        lineNumber++;
+                        startPos=1;
+                        currentPos=1;
+                    } 
                     lineHasSemiColon = false;
                     currentToken = "";
                     lineNumber++;
                     startPos=1;
-                    currentPos=1; 
+                    currentPos=1;
                 }         
             }
-            if (!s[s.Length-1].Equals(';')) Console.WriteLine("Lexical Error: Line {0} does not have semicolon at the end.", lineNumber); hasLexicalErrors = true;      
+            if (!s[s.Length-1].Equals(';') && !s[s.Length-1].Equals('\n')) {
+                Console.WriteLine("Lexical Error: Line {0} does not have semicolon at the end.", lineNumber); 
+                hasLexicalErrors = true;     
+            } 
+             
             return tokens;
         }
 

@@ -1,2 +1,2 @@
-
-print ntimes
+var X : bool := true;
+;
