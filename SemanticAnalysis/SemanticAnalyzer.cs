@@ -8,7 +8,7 @@ namespace MiniPL_Interpreter.SemanticAnalysis
 {
     public class SemanticAnalyzer {
         private List<ASTNode> ASTNodes;
-        public bool HaveSemanticErrors;
+        public bool HasSemanticErrors;
         public Dictionary<object, object> identifiers;
         public SemanticAnalyzer(List<ASTNode> ASTNodes)
         {
@@ -29,7 +29,7 @@ namespace MiniPL_Interpreter.SemanticAnalysis
                 case TokenType.ASSERT:  break;
                 case TokenType.FOR: break;
                 default:
-                    HaveSemanticErrors = true;
+                    HasSemanticErrors = true;
                     Console.WriteLine("Some unexpected error occurred.");
                     break;     
                 }
@@ -38,21 +38,33 @@ namespace MiniPL_Interpreter.SemanticAnalysis
         public void AnalyzeVarStmt(ASTNode stmt)
         {
             if (stmt.GetType() == typeof(VarStmt)) 
-             {
-                 VarStmt varStmt = ((VarStmt) stmt); 
-                 TypeCheckAll((TypeAST)varStmt.type);
-                 IdentifierAST identifier = ((IdentifierAST)varStmt.identifier);
-                 if (!identifiers.ContainsKey(identifier.token.lex))
-                 {
-                    identifiers.Add(identifier.token.lex, 0);
-                 }
-                 else
-                 {
-                    HaveSemanticErrors = true;
-                    Console.WriteLine("Semantic Error: Identifiers can be declared once only. At (" + identifier.token.lineNumber + ", " + identifier.token.startPos + ")");
-                 }
-                    
-             }
+            {
+                VarStmt varStmt = ((VarStmt) stmt); 
+                TypeCheckAll((TypeAST)varStmt.type);
+                IdentifierAST identifier = ((IdentifierAST)varStmt.identifier);
+                if (!identifiers.ContainsKey(identifier.token.lex))
+                {
+                identifiers.Add(identifier.token.lex, 0);
+                }
+                else
+                {
+                HasSemanticErrors = true;
+                Console.WriteLine("Semantic Error: Identifiers can be declared once only. At (" + identifier.token.lineNumber + ", " + identifier.token.startPos + ")");
+                }       
+            } else {
+                VarAssignmentStmt varStmt = ((VarAssignmentStmt) stmt); 
+                TypeCheckAll((TypeAST)varStmt.type);
+                IdentifierAST identifier = ((IdentifierAST)varStmt.identifier);
+                if (!identifiers.ContainsKey(identifier.token.lex))
+                {
+                identifiers.Add(identifier.token.lex, 0);
+                }
+                else
+                {
+                HasSemanticErrors = true;
+                Console.WriteLine("Semantic Error: Identifiers can be declared once only. At (" + identifier.token.lineNumber + ", " + identifier.token.startPos + ")");
+                }
+            }
         }
 
         public void TypeCheckAll(TypeAST type)
@@ -61,27 +73,31 @@ namespace MiniPL_Interpreter.SemanticAnalysis
             if (terminal != TokenType.INT && terminal != TokenType.STRING 
             && terminal != TokenType.BOOL)
             {
-                HaveSemanticErrors = true;
+                HasSemanticErrors = true;
                 Console.WriteLine("Error: Type should be integer, string or bool.");
             }
         }
 
         public void AnalyzePrint(PrintStmt stmt)
         {
+            
+            if (stmt.right == null) return;
+
             if (stmt.right.GetType() == typeof(OperandAST))
             {
-                Token ast = stmt.right.token;
-                if (ast.terminal.Equals(TokenType.IDENTIFIER))
+                Token node = stmt.right.token;
+                if (node.terminal.Equals(TokenType.IDENTIFIER))
                 {
-                    isDeclaredGlobally(ast.lex);
+                    isDeclaredGlobally(node.lex);
                 }
                 
-                if (!ast.terminal.Equals(TokenType.STRING)
-                && !ast.terminal.Equals(TokenType.INT))
+                if (!node.terminal.Equals(TokenType.STRING)
+                && !node.terminal.Equals(TokenType.INT) && !node.terminal.Equals(TokenType.IDENTIFIER))
                 {
-                    Console.WriteLine("Type error: Print value should be String or Integer at (" + ast.lineNumber + ", " + ast.startPos + ")");
-                    HaveSemanticErrors = true;
+                    SemanticError("Type error: Print value should be identified, string literal or number", node.lineNumber, node.startPos);
                 }
+            } else {
+                SemanticError("There are too many arguments on print statement", stmt.token.lineNumber, stmt.token.startPos);
             }
         }
             
@@ -90,9 +106,21 @@ namespace MiniPL_Interpreter.SemanticAnalysis
             Console.WriteLine(identifiers.ContainsKey(lex));
             if (!identifiers.ContainsKey(lex)) 
             {
-                Console.WriteLine("Type error: Identifier \"" + lex + "\" is not declared before use.");
-                HaveSemanticErrors = true;
+                Console.WriteLine("Declaration error: Identifier \"" + lex + "\" is not declared before use.");
+                HasSemanticErrors = true;
             }
+        }
+
+        public void SemanticError(string msg, int lineNumber, int startPos)
+        {
+            Console.WriteLine("Semantic Error: " + msg + " at (" + lineNumber + ", " + startPos + ")");
+            HasSemanticErrors = true;
+        }
+
+        public void TypeError(string msg, int lineNumber, int startPos)
+        {
+            Console.WriteLine("Type Error: " + msg + " at (" + lineNumber + ", " + startPos + ")");
+            HasSemanticErrors = true;
         }
     }
 

@@ -16,15 +16,15 @@ namespace MiniPL_Interpreter.AST
     }
     public class VarAssignmentStmt : ASTNode
     {
-        public IdentifierAST Identifier {get; set;}
-        public TypeAST Type {get; set;}
+        public IdentifierAST identifier {get;}
+        public TypeAST type {get;}
         public ASTNode expression;
 
-        public VarAssignmentStmt(Token statement, IdentifierAST Identifier, TypeAST Type, ASTNode expression) : base(statement)
+        public VarAssignmentStmt(Token statement, IdentifierAST identifier, TypeAST type, ASTNode expression) : base(statement)
         {
             
-            this.Type = Type;
-            this.Identifier = Identifier;
+            this.type = type;
+            this.identifier = identifier;
             this.expression = expression;
         }
     }

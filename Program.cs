@@ -29,37 +29,30 @@ public class Interpreter {
             Console.WriteLine("File does not exists");
         }
         Console.WriteLine("\n");
-        Scanner lex = new Scanner(input);
-        Parser parser = new Parser(lex.Tokens);
+        Scanner scanner = new Scanner(input);
+        List<Token> tokens = scanner.Tokens;
+        Parser parser = new Parser(tokens);
 
-        List<Token> tokens = lex.Tokens;
         List<ASTNode> ASTNodes = parser.tree;
+        SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(ASTNodes);
+        semanticAnalyzer.AnalyzeSemantics(ASTNodes);
 
-        if (parser.HaveSyntaxErrors || parser.HaveSemanticErrors) 
+        foreach (Token t in tokens)
+        {
+            Console.WriteLine(t);
+        }
+
+        if (scanner.hasLexicalErrors || parser.HasSyntaxErrors || parser.HasSemanticErrors || semanticAnalyzer.HasSemanticErrors) 
         {
             Console.WriteLine("Build failed.");
-        }
-        else 
-        {
-            SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(ASTNodes);
-            semanticAnalyzer.AnalyzeSemantics(ASTNodes);
-
-            if (semanticAnalyzer.HaveSemanticErrors) 
-            {
-                Console.WriteLine("Build failed.");
-            } else {
-                foreach (Token t in tokens)
-                {
-                    Console.WriteLine(t);
-                }
+        } else {
                 Console.WriteLine("Abstract Syntax Tree:");
                 Console.WriteLine("stmts");
                 foreach (ASTNode n in ASTNodes)
                 {
                     CreateAST(n, "", false);
                 }
-            } 
-        }  
+        } 
     }
     public static void CreateAST(ASTNode node, string indent, bool last)
     {
@@ -86,19 +79,15 @@ public class Interpreter {
     public static void CreateVarAssignment(ASTNode node, string indent, bool last)
     {
         string rightIndent = indent;
-
         Console.WriteLine("|  \\");
         NextLeft(indent);
-        if (node.GetType() == typeof(VarStmt));
-        {
+        try {
             Console.WriteLine(((VarStmt)node).identifier.token.lex);
             NextLeft(indent);
             Console.WriteLine(((VarStmt)node).type.token.lex);
             return;
-        }
-        
-        if (((VarAssignmentStmt)node).expression != null)
-        {
+        } catch {
+            try {
             ExprVar expression = ((ExprVar)((VarAssignmentStmt)node).expression);
             OperandAST operand = null;
             while (true)
@@ -128,7 +117,19 @@ public class Interpreter {
                     break;
                 }
             }
+            } catch {
+                Console.WriteLine(((VarAssignmentStmt)node).identifier.token.lex);
+                NextLeft(indent);
+                Console.WriteLine(((VarAssignmentStmt)node).type.token.lex);
+                OperandAST operand = ((OperandAST)((VarAssignmentStmt)node).expression);
+                rightIndent = nextRight(indent);
+                indent = rightIndent;
+                Console.WriteLine(operand.token.lex);   
+            }
+            
         }
+        
+        
     }
 
     public static void CreatePrint(ASTNode node, string indent, bool last)
@@ -137,7 +138,7 @@ public class Interpreter {
         Console.WriteLine("|  \\");
         NextLeft(indent);
         Console.WriteLine(((PrintStmt)node).token.lex);
-        OperandAST operand =   ((OperandAST)((PrintStmt)node).right);
+        OperandAST operand = ((OperandAST)((PrintStmt)node).right);
         rightIndent = nextRight(rightIndent);
         Console.WriteLine(operand.token.lex);
     }

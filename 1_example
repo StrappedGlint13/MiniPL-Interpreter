@@ -1,2 +1,2 @@
-var ntimes : int;
-print "How many times?";
+
+print ntimes

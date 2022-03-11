@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/home/matibrax/MiniPL-Interpreter/MiniPL-Interpreter.csproj": {}
+    "/home/matibrax/MiniPL-Interpreter/src/MiniPL-Interpreter.csproj": {}
   },
   "projects": {
-    "/home/matibrax/MiniPL-Interpreter/MiniPL-Interpreter.csproj": {
+    "/home/matibrax/MiniPL-Interpreter/src/MiniPL-Interpreter.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/matibrax/MiniPL-Interpreter/MiniPL-Interpreter.csproj",
+        "projectUniqueName": "/home/matibrax/MiniPL-Interpreter/src/MiniPL-Interpreter.csproj",
         "projectName": "MiniPL-Interpreter",
-        "projectPath": "/home/matibrax/MiniPL-Interpreter/MiniPL-Interpreter.csproj",
+        "projectPath": "/home/matibrax/MiniPL-Interpreter/src/MiniPL-Interpreter.csproj",
         "packagesPath": "/home/matibrax/.nuget/packages/",
-        "outputPath": "/home/matibrax/MiniPL-Interpreter/obj/",
+        "outputPath": "/home/matibrax/MiniPL-Interpreter/src/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/matibrax/.nuget/NuGet/NuGet.Config"

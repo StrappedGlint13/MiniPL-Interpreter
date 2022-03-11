@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "EXZ+kDBxE1cEGOUD6+0nkVBKI5afeLW2knyiMji7n1jYv2+ZzzKa26Y6tz1uidRriKD9kY1rYJ7ZXmaphWMbzg==",
+  "dgSpecHash": "FqNp/ZKqT88S2iShhmIIePIHsDehVGcF+sIQ06r8mtmeI8aKDWQFTJJW+ia4lmsdMy7NsnYsCD8vK63iNTlIRg==",
   "success": true,
-  "projectFilePath": "/home/matibrax/MiniPL-Interpreter/MiniPL-Interpreter.csproj",
+  "projectFilePath": "/home/matibrax/MiniPL-Interpreter/src/MiniPL-Interpreter.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

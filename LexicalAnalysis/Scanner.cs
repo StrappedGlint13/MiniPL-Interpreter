@@ -10,6 +10,7 @@ namespace LexicalAnalysis
         private int currentPos = 0;
         private string currentToken = "";
         private bool lineHasSemiColon = false; 
+        public bool hasLexicalErrors;
 
         private readonly Dictionary<string, TokenType> reservedWords = new Dictionary<string, TokenType>()
         {
@@ -134,7 +135,7 @@ namespace LexicalAnalysis
                 }
                 else if (IsEndOfLine(@char))
                 {
-                    if (!lineHasSemiColon) Console.WriteLine("Lexical Error: Line {0} does not have semicolon at the end.", lineNumber);      
+                    if (!lineHasSemiColon) Console.WriteLine("Lexical Error: Line {0} does not have semicolon at the end.", lineNumber); hasLexicalErrors = true;      
                     lineHasSemiColon = false;
                     currentToken = "";
                     lineNumber++;
@@ -142,6 +143,7 @@ namespace LexicalAnalysis
                     currentPos=1; 
                 }         
             }
+            if (!s[s.Length-1].Equals(';')) Console.WriteLine("Lexical Error: Line {0} does not have semicolon at the end.", lineNumber); hasLexicalErrors = true;      
             return tokens;
         }
 
