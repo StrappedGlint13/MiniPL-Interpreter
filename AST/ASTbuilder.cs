@@ -16,7 +16,7 @@ namespace MiniPL_Interpreter.AST
             }
             else
             {
-                Console.WriteLine("|-" + node.token.lex + "_stmt");
+                Console.WriteLine(" \\-" + node.token.terminal + "_stmt");
             }
             if (node.token.terminal == TokenType.VAR)
             {
@@ -32,7 +32,6 @@ namespace MiniPL_Interpreter.AST
         public void CreateVarAssignment(ASTNode node, string indent, bool last)
         {
             string rightIndent = indent;
-            Console.WriteLine("|  \\");
             NextLeft(indent);
             try {
                 Console.WriteLine(((VarStmt)node).identifier.token.lex);
@@ -41,6 +40,7 @@ namespace MiniPL_Interpreter.AST
                 return;
             } catch {
                 try {
+                Console.WriteLine(((VarAssignmentStmt)node).identifier.token.lex);
                 ExprVar expression = ((ExprVar)((VarAssignmentStmt)node).expression);
                 OperandAST operand = null;
                 while (true)

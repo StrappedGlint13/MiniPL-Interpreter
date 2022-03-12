@@ -44,8 +44,30 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
             while(!EOF)
             {
                 ASTNode astNode = Statement();
-                if (astNode != null) tree.Add(astNode); 
-                match(CurrentToken().terminal, TokenType.SEMICOLON, "';', '(...)', \'\"\' or assignment");
+                if (astNode != null) 
+                {
+                    tree.Add(astNode);
+                    match(CurrentToken().terminal, TokenType.SEMICOLON, "';', '(...)', \'\"\' or assignment");
+                }
+                else 
+                {
+                    Recover(CurrentToken().lineNumber);
+                }
+            }
+        }
+        /// <summary>
+        /// A method for recovering from the errounes statement to the next "working" statement.
+        /// </summary>
+        /// <param name="el"></param>
+        public void Recover(int el)
+        {
+            while(CurrentToken().lineNumber == el)            
+            {             
+                if (EOF)
+                {
+                    break;
+                }
+                nextToken();
             }
         }
 
@@ -111,9 +133,13 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
                     List<ASTNode> forTree = new List<ASTNode>();
                     while (CurrentToken().terminal != TokenType.END && !HasSyntaxErrors) // this check is here for avoiding cascading errors
                     {
-                       ASTNode forNode = Statement();
-                       if (forNode != null) forTree.Add(forNode); 
-                       match(CurrentToken().terminal, TokenType.SEMICOLON, "';', '(...)' or assignment");
+                        ASTNode forNode = Statement();
+                        if (forNode != null) 
+                        {
+                            forTree.Add(forNode);
+                        } else {
+                            Recover(CurrentToken().lineNumber);
+                        }
                     }
                     match(CurrentToken().terminal, TokenType.END, "END");
                     match(CurrentToken().terminal, TokenType.FOR, "FOR");
@@ -207,7 +233,7 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
             } 
             else 
             {
-                HasSyntaxErrors = ExpectedError(CurrentToken().lineNumber, CurrentToken().startPos, lex);;
+                HasSyntaxErrors = ExpectedError(CurrentToken().lineNumber, CurrentToken().startPos, lex);
             }
         }
         /// <summary>

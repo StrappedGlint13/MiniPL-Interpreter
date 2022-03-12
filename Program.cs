@@ -16,48 +16,58 @@ namespace Mini_PL_Interpreter
 public class Interpreter {
     
     public static void Main(string[] args) {
-        //Console.Write("Enter the filename: ");
-        string file = "Test_data/1_example";
-        //string file = Console.In.ReadLine();
-
-        string input = "";
-        if (File.Exists(file)) {    
-            input = File.ReadAllText(file);
-            char[] line = input.ToCharArray();
-            foreach (char ch in line)
+        while(true)
             {
-                Console.Write(ch);
+            Console.Write("Enter the filename from the Test_data folder f.ex: 1_example\nQuit typing \"exit\"\nEnter the program name: ");
+            string file = Console.In.ReadLine();
+            if (file.Equals("quit")) break;
+            
+            string input = "";
+            if (File.Exists("Test_data/" + file)) {    
+                input = File.ReadAllText("Test_data/" + file);
+                char[] line = input.ToCharArray();
+            } else {
+                Console.WriteLine("File does not exists");
+                continue;
             }
-        } else {
-            Console.WriteLine("File does not exists");
-        }
-        Console.WriteLine("\n");
-        Scanner scanner = new Scanner(input);
-        List<Token> tokens = scanner.Tokens;
+            Console.WriteLine("\n");
+            Console.WriteLine("Scanner:");
+            Scanner scanner = new Scanner(input);
+            List<Token> tokens = scanner.Tokens;
 
-        foreach (Token t in tokens)
-        {
-            Console.WriteLine(t);
-        }
+            foreach (Token t in tokens)
+            {
+                Console.WriteLine(t);
+            }
 
-        Parser parser = new Parser(tokens);
+            Parser parser = new Parser(tokens);
 
-        List<ASTNode> ASTNodes = parser.tree;
-        SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(ASTNodes);
-        semanticAnalyzer.AnalyzeSemantics(ASTNodes);
+            List<ASTNode> ASTNodes = parser.tree;
+            
 
-        if (scanner.hasLexicalErrors || parser.HasSyntaxErrors || parser.HasSemanticErrors || semanticAnalyzer.HasSemanticErrors) 
-        {
-            Console.WriteLine("Build failed.");
-        } else {
+            if (scanner.hasLexicalErrors || parser.HasSyntaxErrors || parser.HasSemanticErrors) 
+            {
+                Console.WriteLine("\nBuild failed due to given program syntax.");
+                continue;
+            } 
+
+            SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(ASTNodes);
+            semanticAnalyzer.AnalyzeSemantics(ASTNodes);
+
+            if (semanticAnalyzer.HasSemanticErrors)
+            {
+                Console.WriteLine("\nBuild failed due to given program semantics.");
+                continue;
+            }
+            
             ASTbuilder astBuilder = new ASTbuilder();
-            Console.WriteLine("Abstract Syntax Tree:");
+            Console.WriteLine("\nAbstract Syntax Tree:");
             Console.WriteLine("stmts");
             foreach (ASTNode n in ASTNodes)
             {
                 astBuilder.CreateAST(n, "", false);
             }
-            Console.Write("\\-$$\n");
+            Console.Write("\\-$$\n"); 
         } 
     }
 }

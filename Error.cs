@@ -49,7 +49,7 @@ namespace Mini_PL_Interpreter
         /// <returns>bool</returns>
         public bool ExpectedError(int lineNumber, int startPos, object lex)
         {
-            Console.WriteLine("Syntax error at (" + lineNumber  + ", " + startPos + "). Excpected: \"" + lex + "\"");
+            Console.WriteLine("Syntax error at (" + lineNumber  + ", " + (startPos-1) + "). Excpected: \"" + lex + "\"");
             return true;
         }
         /// <summary>

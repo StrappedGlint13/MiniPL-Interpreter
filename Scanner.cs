@@ -72,9 +72,18 @@ namespace LexicalAnalysis
                 if (isString) 
                 {
                     isString = false;
-                    tokens.Add(new Token(TokenType.STRING, currentToken+@char, startPos, lineNumber));
-                    NewToken();
-                    continue;
+                    if (isIdentifier(currentToken+@char)) 
+                    {
+                        tokens.Add(new Token(TokenType.IDENTIFIER, currentToken+@char, startPos, lineNumber));
+                        NewToken();
+                    }
+                    else
+                    {
+                        tokens.Add(new Token(TokenType.STRING, currentToken+@char, startPos, lineNumber));
+                        NewToken();
+                        continue;
+                    }
+                    
                 } 
 
 
@@ -88,8 +97,17 @@ namespace LexicalAnalysis
                 if (isNumber) 
                 {
                     isNumber = false;
-                    tokens.Add(new Token(TokenType.INTEGER, currentToken, startPos, lineNumber));
-                    NewToken();
+                    if (isIdentifier(currentToken)) 
+                    {
+                        tokens.Add(new Token(TokenType.IDENTIFIER, currentToken, startPos, lineNumber));
+                        NewToken();
+                    }
+                    else
+                    {
+                        tokens.Add(new Token(TokenType.INTEGER, currentToken, startPos, lineNumber));
+                        NewToken();
+                    }
+                    
                 }
                 
                 if (@char.Equals('t') && currentToken == "in" || @char.Equals(':') || (@char.Equals('=') && currentToken == ":")) 
@@ -173,6 +191,43 @@ namespace LexicalAnalysis
              
             return tokens;
         }
+        public bool isIdentifier(string s)
+        {
+            char[] chars =  s.ToCharArray();
+            bool digitsExists = false;
+            bool literalExists = false;
+            bool lowerCaseExists = false;
+            char lowerCase = '_';
+           
+            foreach(char ch in chars)
+            {
+                if (IsNumberChar(ch))
+                {
+                    digitsExists = true;
+                } 
+                else if (ch.Equals(lowerCase))
+                {
+                    lowerCaseExists = true;
+                }
+                else 
+                {
+                    literalExists = true;
+                }
+            }
+
+            if ((literalExists && digitsExists) 
+            || (literalExists && lowerCaseExists) 
+            || (literalExists && lowerCaseExists && digitsExists) )
+            {
+                if (IsNumberChar(chars[0]) || chars[0].Equals('_')) hasLexicalErrors = LexicalError("Invalid form of identifier.");
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         /// <summary>
         /// Method for checking if formed string belongs in the keywords.
         /// </summary>
