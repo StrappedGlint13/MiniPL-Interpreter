@@ -3,7 +3,9 @@ using Mini_PL_Interpreter;
 
 namespace LexicalAnalysis
 {
-    
+    /// <summary>
+    /// A class for lexical analysis.
+    /// </summary>
     public class Scanner : Error {
         public List<Token> Tokens { get; set; }
         private int lineNumber = 1;
@@ -24,6 +26,12 @@ namespace LexicalAnalysis
         {
             Tokens = Scan(lines);
         }
+
+        /// <summary>
+        /// A method that scans all the characters and forms the tokens.
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns> List of tokens. </returns>
         public List<Token> Scan(string s) 
         {
             char[] line = s.ToCharArray();
@@ -159,13 +167,17 @@ namespace LexicalAnalysis
                     currentPos=1;
                 }         
             }
-            if (!s[s.Length-1].Equals(';') && !s[s.Length-1].Equals('\n')) {
+            if (s.Length > 0 && !s[s.Length-1].Equals(';') && !s[s.Length-1].Equals('\n')) {
                 hasLexicalErrors = LexicalError("Line " + lineNumber + " does not have semicolon at the end.");     
             } 
              
             return tokens;
         }
-
+        /// <summary>
+        /// Method for checking if formed string belongs in the keywords.
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns> Token that is either identifier or keyword. </returns>
         public Token isIdentifierOrKeyWord(String str)
         {
             if (reservedWords.ContainsKey(str))
@@ -182,7 +194,13 @@ namespace LexicalAnalysis
                 return new Token(TokenType.IDENTIFIER, str, startPos, lineNumber);
             }
         }
-
+        /// <summary>
+        /// A method for identifying operator. There is also assignment ":=" covered in this method.
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="startPos"></param>
+        /// <param name="lineNumber"></param>
+        /// <returns>A token with corresponding operator, or else NONE type.</returns>
         public Token IdentifyOperator(string str, int startPos, int lineNumber)
         { 
             switch(str) 
@@ -231,13 +249,19 @@ namespace LexicalAnalysis
                 break;     
             }
         }
-
+        /// <summary>
+        /// A method for moving into next token.
+        /// </summary>
         private void NewToken()
         {
            currentToken = "";
            startPos=currentPos;
         }
-
+        /// <summary>
+        /// A boolean method checking if current character is a whitespace.
+        /// </summary>
+        /// <param name="ch"></param>
+        /// <returns>true or false.</returns>
         private bool IsWhiteSpace(char ch)
         {
             if (ch == ' ')
@@ -247,7 +271,11 @@ namespace LexicalAnalysis
             return false;
         }
 
-
+        /// <summary>
+        /// A boolean method checking if current character is end of line.
+        /// </summary>
+        /// <param name="ch"></param>
+        /// <returns>true or false.</returns>
         private bool IsEndOfLine(char ch)
         {
             if (ch == '\n')
@@ -256,7 +284,11 @@ namespace LexicalAnalysis
             }
             return false;
         }
-
+        /// <summary>
+        /// A boolean method checking if current character is a digit.
+        /// </summary>
+        /// <param name="ch"></param>
+        /// <returns>true or false.</returns>
         private bool IsNumberChar(char ch)
         {
             if (!char.IsDigit(ch))
@@ -265,7 +297,11 @@ namespace LexicalAnalysis
                 }
             return true;
         }
-
+        /// <summary>
+        /// A boolean method checking if current string is a digit.
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
         private bool IsNumberString(string str)
         {
             foreach (char ch in str)

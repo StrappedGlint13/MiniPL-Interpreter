@@ -6,6 +6,9 @@ using Mini_PL_Interpreter;
 
 namespace MiniPL_Interpreter.SyntaxAnalysis
 {
+    /// <summary>
+    /// A class for syntax analysis.
+    /// </summary>
     public class Parser : Error
     {
         private List<Token> tokens;
@@ -29,18 +32,13 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
             this.identifiers = new List<object>();
             this.currentIndex = 0;
             this.currentToken = tokens[currentIndex];
-            //createAST();
             Parse(tokens);
         }
 
-        public void AnalyzeSemantics(List<ASTNode> ASTNodes)
-        {
-            foreach (ASTNode node in ASTNodes)
-            {
-                Console.WriteLine(node);
-            }
-        }
-
+        /// <summary>
+        /// A method for parsing the list of tokens and creating sentences in the AST.
+        /// </summary>
+        /// <param name="tokens"></param>
         public void Parse(List<Token> tokens)
         {
             while(!EOF)
@@ -50,6 +48,11 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
                 match(CurrentToken().terminal, TokenType.SEMICOLON, "';', '(...)', \'\"\' or assignment");
             }
         }
+
+        /// <summary>
+        /// A method that creates <stmts> according Mini-PL grammar.
+        /// </summary>
+        /// <returns> A node to the AST. </returns>
         public ASTNode Statement()
         {   
             ASTNode expression = null;
@@ -77,7 +80,7 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
                     nextToken();
                     match(CurrentToken().terminal, TokenType.ASSIGN, ":=");
                     expression = ExprVariableDeclaration();
-                    return new VariableStmt(currentStmt, expression);
+                    return new IdentifierStmt(currentStmt, expression);
                     break;
                 case TokenType.PRINT: 
                     currentStmt = CurrentToken();
@@ -124,7 +127,10 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
         }
 
         
-
+        /// <summary>
+        /// A method for creating <expr>.
+        /// </summary>
+        /// <returns>  A node to the AST. </returns>
         public ASTNode ExprVariableDeclaration() 
         {
             
@@ -153,20 +159,10 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
             ASTNode right = Operand();
             return new ExprVar(left, op, right);
         }
-
-        public void Recover(int el)
-        {
-            while(CurrentToken().lineNumber == el)
-            {             
-                // if last token
-                if (CurrentToken().startPos == tokens[tokens.Count-1].startPos)
-                {
-                    break;
-                }
-                nextToken();
-            }
-        }
-
+        /// <summary>
+        /// A method for creating <Oper>.
+        /// </summary>
+        /// <returns> A node to the AST. </returns>
         public ASTNode Operand() 
         {
             Token lhs = CurrentToken();
@@ -197,22 +193,27 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
                 }
         }
 
-
-        public Token match(TokenType terminal, TokenType type, object lex)
+        /// <summary>
+        /// A method for generally matching tokens according the grammar.
+        /// </summary>
+        /// <param name="terminal"></param>
+        /// <param name="type"></param>
+        /// <param name="lex"></param>
+        public void match(TokenType terminal, TokenType type, object lex)
         {
             if (terminal == type) 
             {
-                Token t = CurrentToken();
-                nextToken();
-                return t;            
+                nextToken();       
             } 
             else 
             {
                 HasSyntaxErrors = ExpectedError(CurrentToken().lineNumber, CurrentToken().startPos, lex);;
-                return null;
             }
         }
-
+        /// <summary>
+        /// A method for recognizing the identifier.
+        /// </summary>
+        /// <returns> A identifier node to the AST. </returns>
         public IdentifierAST matchId()
         {
             Token t = CurrentToken();
@@ -228,12 +229,17 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
                 return null;
             }
         }
-
+        /// <summary>
+        /// A method for returning current token.
+        /// </summary>
+        /// <returns> Current token. </returns>
         public Token CurrentToken()
         {
             return currentToken;
         }
-
+        /// <summary>
+        /// A method for moving on with the tokens.
+        /// </summary>
         public void nextToken()
         {
             currentIndex++;
@@ -245,7 +251,10 @@ namespace MiniPL_Interpreter.SyntaxAnalysis
             
             else this.currentToken = tokens[currentIndex];
         }
-
+        /// <summary>
+        /// A method for recognizing the type.
+        /// </summary>
+        /// <returns> A type node to the AST </returns>
         public TypeAST Type()
         {
             Token t = CurrentToken();

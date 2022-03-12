@@ -6,6 +6,9 @@ using Mini_PL_Interpreter;
 
 namespace MiniPL_Interpreter.SemanticAnalysis
 {
+    /// <summary>
+    /// Semantic analyzer class.
+    /// </summary>
     public class SemanticAnalyzer : Error {
         private List<ASTNode> ASTNodes;
         public bool HasSemanticErrors;
@@ -15,7 +18,10 @@ namespace MiniPL_Interpreter.SemanticAnalysis
             this.ASTNodes = new List<ASTNode>();
             this.identifiers = new Dictionary<object, object>();
         }
-
+        /// <summary>
+        /// Method for analyzing created ASTNodes. Method and its submethods will report all the errors they find.
+        /// </summary>
+        /// <param name="ASTNodes"></param>
         public void AnalyzeSemantics(List<ASTNode> ASTNodes)
         {
             foreach (ASTNode node in ASTNodes)
@@ -23,7 +29,7 @@ namespace MiniPL_Interpreter.SemanticAnalysis
                 switch(node.token.terminal) 
                 {
                 case TokenType.VAR: AnalyzeVarStmt(node); break;
-                case TokenType.IDENTIFIER: AnalyzeIdentifier((VariableStmt)node); break;
+                case TokenType.IDENTIFIER: break;
                 case TokenType.PRINT: AnalyzePrint((PrintStmt)node); break;
                 case TokenType.READ:  break;
                 case TokenType.ASSERT:  break;
@@ -35,16 +41,14 @@ namespace MiniPL_Interpreter.SemanticAnalysis
                 }
             }
         }
-
-        public void AnalyzeIdentifier(VariableStmt stmt)
-        {
-            ASTNode or = ((ASTNode)stmt);
-            object value = or.value;
-            Console.WriteLine(value);
-            identifierIsAlreadyInUse(stmt.token.lex, value, stmt.token.lineNumber, stmt.token.startPos);
-        }
-
-        public void identifierIsAlreadyInUse(object lex, object value, int lineNumber, int startPos)
+        /// <summary>
+        /// Method for checking if identifier is already in use. 
+        /// </summary>
+        /// <param name="lex"></param>
+        /// <param name="value"></param>
+        /// <param name="lineNumber"></param>
+        /// <param name="startPos"></param>
+        public void IdentifierIsAlreadyInUse(object lex, object value, int lineNumber, int startPos)
         {
             if (!identifiers.ContainsKey(lex))
             {
@@ -55,7 +59,10 @@ namespace MiniPL_Interpreter.SemanticAnalysis
             HasSemanticErrors = SemanticError("There are too many arguments on print statement", lineNumber, startPos);
             }       
         }
-
+        /// <summary>
+        /// Method for "var" statement. Method covers also ":= <expr>" assignment expressions.
+        /// </summary>
+        /// <param name="stmt"></param>
         public void AnalyzeVarStmt(ASTNode stmt)
         {
             if (stmt.GetType() == typeof(VarStmt)) 
@@ -63,15 +70,19 @@ namespace MiniPL_Interpreter.SemanticAnalysis
                 VarStmt varStmt = ((VarStmt) stmt); 
                 TypeCheckAll((TypeAST)varStmt.type);
                 IdentifierAST identifier = ((IdentifierAST)varStmt.identifier);
-                identifierIsAlreadyInUse(identifier.token.lex, null, stmt.token.lineNumber, stmt.token.startPos);
+                IdentifierIsAlreadyInUse(identifier.token.lex, null, stmt.token.lineNumber, stmt.token.startPos);
             } else {
                 VarAssignmentStmt varStmt = ((VarAssignmentStmt) stmt); 
                 TypeCheckAll((TypeAST)varStmt.type);
                 IdentifierAST identifier = ((IdentifierAST)varStmt.identifier);
-                identifierIsAlreadyInUse(identifier.token.lex, null, stmt.token.lineNumber, stmt.token.startPos);
+                IdentifierIsAlreadyInUse(identifier.token.lex, null, stmt.token.lineNumber, stmt.token.startPos);
             }
         }
 
+        /// <summary>
+        /// Method for type checking.
+        /// </summary>
+        /// <param name="type"></param>
         public void TypeCheckAll(TypeAST type)
         {
             if (type == null) return;
@@ -83,7 +94,10 @@ namespace MiniPL_Interpreter.SemanticAnalysis
                 HasSemanticErrors = ErrorMessage("Error: Type should be integer, string or bool.");
             }
         }
-
+        /// <summary>
+        /// Method for analyzing "print" statement.
+        /// </summary>
+        /// <param name="stmt"></param>
         public void AnalyzePrint(PrintStmt stmt)
         {
             
@@ -109,7 +123,10 @@ namespace MiniPL_Interpreter.SemanticAnalysis
                 HasSemanticErrors = SemanticError("There are too many arguments on print statement", stmt.token.lineNumber, stmt.token.startPos);
             }
         }
-            
+        /// <summary>
+        /// Method for checking if identifier is declared globally.
+        /// </summary>
+        /// <param name="lex"></param>
         public void isDeclaredGlobally(object lex)
         {
             if (!identifiers.ContainsKey(lex)) 

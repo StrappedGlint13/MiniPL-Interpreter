@@ -10,11 +10,14 @@ namespace Mini_PL_Interpreter
     
 }
 
+/// <summary>
+/// A main class of the interpreter.
+/// </summary>
 public class Interpreter {
     
     public static void Main(string[] args) {
         //Console.Write("Enter the filename: ");
-        string file = "1_example";
+        string file = "Test_data/1_example";
         //string file = Console.In.ReadLine();
 
         string input = "";

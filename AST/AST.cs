@@ -3,7 +3,10 @@ using System.Collections.Generic;
 
 namespace MiniPL_Interpreter.AST
 {
-    public class ASTNode
+    /// <summary>
+    /// Abstract class for general AST node.
+    /// </summary>
+    abstract public class ASTNode
     {
         public Token token;
 
@@ -13,18 +16,16 @@ namespace MiniPL_Interpreter.AST
         }
     }
 
-    public class OpAST : ASTNode
-    {
-        public OpAST (Token token) : base(token){}
-    }
-
+    /// <summary>
+    /// AST node for <Oper>
+    /// </summary>
     public class OperandAST : ASTNode
     {
         public object value;
 
-        public OperandAST (Token token, object lexeme) : base(token)
+        public OperandAST (Token token, object value) : base(token)
         {
-            this.value = lexeme;
+            this.value = value;
         }
     }
     

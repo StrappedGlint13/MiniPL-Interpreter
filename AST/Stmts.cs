@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace MiniPL_Interpreter.AST
 {
+    /// <summary>
+    /// A class for <stmt> "var" without ":=".
+    /// </summary>
     public class VarStmt : ASTNode
     {
         public IdentifierAST identifier {get; set;}
@@ -14,6 +17,9 @@ namespace MiniPL_Interpreter.AST
             this.identifier = identifier;
         }
     }
+    /// <summary>
+    /// A class for <stmt> "var" with the tail ":=" <expr
+    /// </summary>
     public class VarAssignmentStmt : ASTNode
     {
         public IdentifierAST identifier {get;}
@@ -28,17 +34,21 @@ namespace MiniPL_Interpreter.AST
             this.expression = expression;
         }
     }
-
-    public class VariableStmt : ASTNode
+    /// <summary>
+    /// A class for identifier declaration statement.
+    /// </summary>
+    public class IdentifierStmt : ASTNode
     {
         public ASTNode expression;
 
-        public VariableStmt(Token statement, ASTNode expression) : base(statement)
+        public IdentifierStmt(Token statement, ASTNode expression) : base(statement)
         {
             this.expression = expression;
         }
     }
-
+    /// <summary>
+    /// A class for print statement.
+    /// </summary>
     public class PrintStmt : ASTNode
     {
         public ASTNode right;
@@ -49,6 +59,9 @@ namespace MiniPL_Interpreter.AST
         }
     }
 
+    /// <summary>
+    /// A class for read statement.
+    /// </summary>
     public class ReadStmt : ASTNode
     {
         private IdentifierAST identifier;
@@ -58,7 +71,9 @@ namespace MiniPL_Interpreter.AST
             this.identifier = identifier;
         }
     }
-
+    /// <summary>
+    /// A class for assert statement.
+    /// </summary>
     public class AssertStmt : ASTNode
     {
         private ASTNode expression;
@@ -68,7 +83,9 @@ namespace MiniPL_Interpreter.AST
             this.expression = expression;
         }
     }
-
+    /// <summary>
+    /// A class for "for" statement."
+    /// </summary>
     public class ForStmt : ASTNode
     {
         private ASTNode startingCondition;
