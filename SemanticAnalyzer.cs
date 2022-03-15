@@ -56,7 +56,7 @@ namespace MiniPL_Interpreter.SemanticAnalysis
             }
             else
             {
-            HasSemanticErrors = SemanticError("There are too many arguments on print statement", lineNumber, startPos);
+            HasSemanticErrors = SemanticError("Identifier is already declared", lineNumber, startPos);
             }       
         }
         /// <summary>

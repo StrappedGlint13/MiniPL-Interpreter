@@ -20,7 +20,7 @@ public class Interpreter {
             {
             Console.Write("Enter the filename from the Test_data folder f.ex: 1_example\nQuit typing \"exit\"\nEnter the program name: ");
             string file = Console.In.ReadLine();
-            if (file.Equals("quit")) break;
+            if (file.Equals("exit")) break;
             
             string input = "";
             if (File.Exists("Test_data/" + file)) {    
